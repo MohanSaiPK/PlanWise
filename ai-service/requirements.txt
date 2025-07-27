@@ -1,2 +1,7 @@
 python-dotenv
-
+fastapi
+requests
+pandas
+uvicorn
+openai
+groq

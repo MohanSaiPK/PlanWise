@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  client:
+    build: ./client
+    ports:
+      - "5173:5173"
+    volumes:
+      - type: bind
+        source: ./client
+        target: /app
+      - type: volume
+        source: client_node_modules
+        target: /app/node_modules
+    environment:
+      - VITE_API_BASE=http://localhost:5000
+    depends_on:
+      - server
+
+  server:
+    build: ./server
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: ./server
+        target: /app
+      - type: volume
+        source: server_node_modules
+        target: /app/node_modules
+    env_file:
+      - ./server/.env
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - type: bind
+        source: ./ai-service
+        target: /app
+    env_file:
+      - ./ai-service/.env
+
+volumes:
+  client_node_modules:
+  server_node_modules:
