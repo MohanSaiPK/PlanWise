@@ -8,7 +8,7 @@ const PublicLayout = () => {
     <>
       <PublicHeader />
 
-      <main className="container mx-auto">
+      <main className="container flex-grow min-h-screen mt-10">
         <Outlet />
       </main>
       <PublicFooter />

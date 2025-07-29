@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 
@@ -28,43 +29,45 @@ app.get("/", async (req, res) => {
   }
 });
 
+app.use("/api/auth", authRoutes);
+
 // Example GET route with database operation
-app.get("/api/data", async (req, res) => {
-  try {
-    // Example database operation
-    // const data = await YourModel.find();
+// app.get("/api/data", async (req, res) => {
+//   try {
+//     // Example database operation
+//     // const data = await YourModel.find();
 
-    // For now, simulate a successful response
-    const data = { items: [], count: 0 };
+//     // For now, simulate a successful response
+//     const data = { items: [], count: 0 };
 
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("GET /api/data error:", error);
+//     res.status(200).json(data);
+//   } catch (error) {
+//     console.error("GET /api/data error:", error);
 
-    // Handle different types of errors
-    if (error.name === "ValidationError") {
-      return res.status(400).json({
-        error: "Validation Error",
-        message: error.message,
-        details: error.errors,
-      });
-    }
+//     // Handle different types of errors
+//     if (error.name === "ValidationError") {
+//       return res.status(400).json({
+//         error: "Validation Error",
+//         message: error.message,
+//         details: error.errors,
+//       });
+//     }
 
-    if (error.name === "CastError") {
-      return res.status(400).json({
-        error: "Invalid ID format",
-        message: "The provided ID is not valid",
-      });
-    }
+//     if (error.name === "CastError") {
+//       return res.status(400).json({
+//         error: "Invalid ID format",
+//         message: "The provided ID is not valid",
+//       });
+//     }
 
-    // Default error response
-    res.status(500).json({
-      error: "Internal server error",
-      message: error.message,
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
+//     // Default error response
+//     res.status(500).json({
+//       error: "Internal server error",
+//       message: error.message,
+//       timestamp: new Date().toISOString(),
+//     });
+//   }
+// });
 
 // 404 handler for undefined routes - temporarily disabled due to path-to-regexp issue
 // app.use("/*", (req, res) => {

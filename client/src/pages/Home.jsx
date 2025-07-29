@@ -1,9 +1,11 @@
 import React from "react";
 import { Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
   return (
-    <div className="flex flex-col items-center  h-screen space-y-16">
+    <div className="flex flex-col items-center  h-screen space-y-16 mt-14">
       <div className="flex flex-row items-center justify-center gap-2 border py-1 rounded-3xl px-4 mt-10">
         <Shield />
         <h1 className="text-sm font-bold">Trusted by 50,000+ investors</h1>
@@ -19,7 +21,10 @@ const Home = () => {
         <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
           Get Started
         </button>
-        <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded-md"
+          onClick={() => navigate("/register")}
+        >
           Signup
         </button>
       </div>
