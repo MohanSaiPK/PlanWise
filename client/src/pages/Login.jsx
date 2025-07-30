@@ -2,8 +2,10 @@ import React from "react";
 //import { useNavigate } from "react-router-dom";
 import img from "../assets/loginimg.png";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,9 +23,6 @@ const Login = () => {
     if (!formData.email || !formData.password) {
       setError("Please fill in all fields");
       return;
-    } else if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return;
     } else if (!formData.email.includes("@")) {
       setError("Please enter a valid email address");
       return;
@@ -32,7 +31,7 @@ const Login = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -41,6 +40,15 @@ const Login = () => {
       });
       const data = await response.json();
       console.log(data);
+      if (response.ok) {
+        // Handle successful login
+        console.log("Login successful:", data);
+        localStorage.setItem("token", data.token);
+        navigate("/Home");
+      } else {
+        setError(data.message || "Login failed");
+        console.error("Login failed:", data);
+      }
     } catch (error) {
       console.error("Error during login:", error);
       setError("Login failed. Please try again.");

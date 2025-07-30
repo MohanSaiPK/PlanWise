@@ -1,13 +1,16 @@
 import React from "react";
 import img from "../assets/regimg.png";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 const Register = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+  const [error, setError] = useState("");
 
   //submit handler
   const handleSubmit = async (e) => {
@@ -19,16 +22,17 @@ const Register = () => {
       !formData.password ||
       !formData.confirmPassword
     ) {
-      alert("Please fill in all fields");
+      setError("Please fill in all fields");
       return;
     } else if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     } else if (formData.password.length < 6) {
-      alert("Password must be at least 6 characters long");
+      setError("Password must be at least 6 characters long");
       return;
     } else if (!formData.email.includes("@")) {
-      alert("Please enter a valid email address");
+      setError("Please enter a valid email address");
+      setError;
       return;
     } else {
       // code to send formData to your backend
@@ -46,12 +50,20 @@ const Register = () => {
         const data = await response.json();
         if (response.ok) {
           alert("Registration successful!");
+          navigate("/login");
         } else {
           alert(data.message || "Registration failed");
         }
       } catch (error) {
         console.error("Error during registration:", error);
         alert("Registration failed. Please try again.");
+      } finally {
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        }); // Reset form data after submission
       }
     }
   };
@@ -72,6 +84,7 @@ const Register = () => {
           <h1 className="text-2xl font-bold">
             PlanWise: Where your vision pays off.
           </h1>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
           <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
             <label className="block text-sm font-medium text-gray-700">
               Create your account!
