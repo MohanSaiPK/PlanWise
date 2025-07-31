@@ -1,5 +1,5 @@
 import React from "react";
-import img from "../assets/regimg.png";
+import img from "../../assets/regimg.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 const Register = () => {

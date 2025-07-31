@@ -1,6 +1,6 @@
 import React from "react";
 //import { useNavigate } from "react-router-dom";
-import img from "../assets/loginimg.png";
+import img from "../../assets/loginimg.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -44,7 +44,7 @@ const Login = () => {
         // Handle successful login
         console.log("Login successful:", data);
         localStorage.setItem("token", data.token);
-        navigate("/Home");
+        navigate("/dashboard");
       } else {
         setError(data.message || "Login failed");
         console.error("Login failed:", data);
