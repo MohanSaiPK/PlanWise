@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/UserRoute.js";
 
 dotenv.config();
 
 const app = express();
-
-app.use(cors());
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
 // Example GET route with error handling
@@ -30,6 +30,7 @@ app.get("/", async (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 // Example GET route with database operation
 // app.get("/api/data", async (req, res) => {

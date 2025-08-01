@@ -3,9 +3,11 @@ import React from "react";
 import img from "../../assets/loginimg.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth.js";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -20,6 +22,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    //validation
     if (!formData.email || !formData.password) {
       setError("Please fill in all fields");
       return;
@@ -44,7 +47,13 @@ const Login = () => {
         // Handle successful login
         console.log("Login successful:", data);
         localStorage.setItem("token", data.token);
-        navigate("/dashboard");
+        login(data.user);
+
+        if (!data.user.monthlyIncome) {
+          navigate("/firstlogin");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         setError(data.message || "Login failed");
         console.error("Login failed:", data);
