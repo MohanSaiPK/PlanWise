@@ -11,7 +11,7 @@ export default function SetupGuard() {
   }
 
   if (!user.monthlyIncome) {
-    return <Navigate to="/firstlogin" replace />;
+    return <Navigate to="/app/firstlogin" replace />;
   }
 
   return <Outlet />;

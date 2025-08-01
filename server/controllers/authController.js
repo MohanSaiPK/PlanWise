@@ -68,17 +68,27 @@ export const login = async (req, res) => {
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1d",
+        expiresIn: "7d",
       }
     );
+    const isSetupComplete =
+      user.monthlyIncome !== null &&
+      user.monthlyIncome !== undefined &&
+      user.jobIncome !== null &&
+      user.jobIncome !== undefined &&
+      user.needsRatio !== null &&
+      user.needsRatio !== undefined &&
+      user.wantsRatio !== null &&
+      user.wantsRatio !== undefined &&
+      user.savingsRatio !== null &&
+      user.savingsRatio !== undefined;
+
     return res.status(200).json({
+      success: true,
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      user,
+      isSetupComplete,
     });
   } catch (error) {
     console.error("Error in login:", error);

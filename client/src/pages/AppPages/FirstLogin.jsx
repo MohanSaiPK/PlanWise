@@ -1,8 +1,10 @@
-import { Currency } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../../hooks/useAuth";
+
 const FirstLogin = () => {
+  const { setUser } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -42,7 +44,8 @@ const FirstLogin = () => {
       const data = await res.json();
       console.log(data);
       if (data.success) {
-        navigate("/dashboard");
+        setUser(data.user);
+        navigate("/app/dashboard");
       }
     } catch (error) {
       console.error("Setup Error", error);

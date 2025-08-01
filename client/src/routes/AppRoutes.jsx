@@ -10,11 +10,9 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route element={<ProtectedRoute />}>
-        //if not income set(initial login)
-        <Route path="/firstlogin" element={<FirstLogin />} />
-        // protected routes
+        <Route path="firstlogin" element={<FirstLogin />} />
         <Route element={<SetupGuard />}>
-          <Route path="/dashboard" element={<MainLayout />}>
+          <Route path="dashboard" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
           </Route>
         </Route>

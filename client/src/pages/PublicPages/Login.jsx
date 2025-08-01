@@ -48,11 +48,17 @@ const Login = () => {
         console.log("Login successful:", data);
         localStorage.setItem("token", data.token);
         login(data.user);
+        const isFirstLogin =
+          !data.user.monthlyIncome ||
+          !data.user.jobIncome ||
+          !data.user.needsRatio ||
+          !data.user.wantsRatio ||
+          !data.user.savingsRatio;
 
-        if (!data.user.monthlyIncome) {
-          navigate("/firstlogin");
+        if (isFirstLogin) {
+          navigate("/app/firstlogin");
         } else {
-          navigate("/dashboard");
+          navigate("/app/dashboard");
         }
       } else {
         setError(data.message || "Login failed");

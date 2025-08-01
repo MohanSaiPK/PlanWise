@@ -10,8 +10,8 @@ const PublicRoutes = () => {
     <Routes>
       <Route path="/" element={<PublicLayout />}>
         <Route index element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
       </Route>
     </Routes>
   );

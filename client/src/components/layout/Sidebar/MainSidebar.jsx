@@ -19,7 +19,7 @@ const MainSidebar = () => {
         Reports
       </div>
       <div className="border-1 p-4 w-48 rounded-xl hover:-translate-y-1 transition duration-300">
-        Settings
+        Insights & Predictions
       </div>
     </div>
   );

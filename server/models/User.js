@@ -5,7 +5,7 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
-
+  monthlyIncome: { type: Number, default: null },
   jobIncome: { type: Number, default: null },
   investmentIncome: { type: Number, default: null },
   sideIncome: { type: Number, default: null },
@@ -17,6 +17,21 @@ const UserSchema = new mongoose.Schema({
   avatar: { type: String },
   savingsGoal: { type: Number, default: null },
   financialGoals: [{ type: String }],
+});
+
+UserSchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate();
+  if (
+    update.jobIncome !== undefined ||
+    update.investmentIncome !== undefined ||
+    update.sideIncome !== undefined
+  ) {
+    const jobIncome = Number(update.jobIncome || 0);
+    const investmentIncome = Number(update.investmentIncome || 0);
+    const sideIncome = Number(update.sideIncome || 0);
+    update.monthlyIncome = jobIncome + investmentIncome + sideIncome;
+  }
+  next();
 });
 
 export default mongoose.model("User", UserSchema);

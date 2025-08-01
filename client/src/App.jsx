@@ -1,18 +1,17 @@
 import "./App.css";
-
+import { Routes, Route } from "react-router-dom";
 import PublicRoutes from "./routes/PublicRoutes";
 import AppRoutes from "./routes/AppRoutes";
-import { Router } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider";
 
 function App() {
   return (
-    <>
-      <AuthProvider>
-        <PublicRoutes />
-        <AppRoutes />
-      </AuthProvider>
-    </>
+    <AuthProvider>
+      <Routes>
+        <Route path="/*" element={<PublicRoutes />} />
+        <Route path="/app/*" element={<AppRoutes />} />
+      </Routes>
+    </AuthProvider>
   );
 }
 
