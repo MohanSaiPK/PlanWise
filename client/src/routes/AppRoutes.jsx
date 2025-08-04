@@ -5,6 +5,11 @@ import SetupGuard from "./SetupGuard";
 import FirstLogin from "../pages/AppPages/FirstLogin";
 import Dashboard from "../pages/AppPages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
+import Transactions from "../pages/AppPages/Transactions";
+import Goals from "../pages/AppPages/Goals";
+import BudgetPlanner from "../pages/AppPages/BudgetPlanner";
+import InsightPred from "../pages/AppPages/InsightPred";
+import Reports from "../pages/AppPages/Reports";
 
 const AppRoutes = () => {
   return (
@@ -12,8 +17,13 @@ const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="firstlogin" element={<FirstLogin />} />
         <Route element={<SetupGuard />}>
-          <Route path="dashboard" element={<MainLayout />}>
-            <Route index element={<Dashboard />} />
+          <Route element={<MainLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="transactions" element={<Transactions />} />
+            <Route path="goals" element={<Goals />} />
+            <Route path="insights" element={<InsightPred />} />
+            <Route path="budget-planner" element={<BudgetPlanner />} />
+            <Route path="reports" element={<Reports />} />
           </Route>
         </Route>
       </Route>

@@ -4,18 +4,18 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/UserRoute.js";
+import transactionRoutes from "./routes/TransRoute.js";
 
 dotenv.config();
 
 const app = express();
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
+// app.options("*", cors());
 
 // Example GET route with error handling
 app.get("/", async (req, res) => {
   try {
-    // Simulate some operation that might fail
-    // Replace this with your actual GET logic
     const data = { message: "PlanWise backend is working. Whew!" };
 
     res.status(200).json(data);
@@ -31,55 +31,8 @@ app.get("/", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/transactions", transactionRoutes);
 
-// Example GET route with database operation
-// app.get("/api/data", async (req, res) => {
-//   try {
-//     // Example database operation
-//     // const data = await YourModel.find();
-
-//     // For now, simulate a successful response
-//     const data = { items: [], count: 0 };
-
-//     res.status(200).json(data);
-//   } catch (error) {
-//     console.error("GET /api/data error:", error);
-
-//     // Handle different types of errors
-//     if (error.name === "ValidationError") {
-//       return res.status(400).json({
-//         error: "Validation Error",
-//         message: error.message,
-//         details: error.errors,
-//       });
-//     }
-
-//     if (error.name === "CastError") {
-//       return res.status(400).json({
-//         error: "Invalid ID format",
-//         message: "The provided ID is not valid",
-//       });
-//     }
-
-//     // Default error response
-//     res.status(500).json({
-//       error: "Internal server error",
-//       message: error.message,
-//       timestamp: new Date().toISOString(),
-//     });
-//   }
-// });
-
-// 404 handler for undefined routes - temporarily disabled due to path-to-regexp issue
-// app.use("/*", (req, res) => {
-//   res.status(404).json({
-//     error: "Route not found",
-//     message: `Cannot ${req.method} ${req.originalUrl}`,
-//     timestamp: new Date().toISOString(),
-//   });
-// });
-
-// Global error handling middleware (must be last)
 app.use((error, req, res, next) => {
   console.error("Global error handler:", error);
 
