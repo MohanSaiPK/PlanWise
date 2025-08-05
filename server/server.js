@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/UserRoute.js";
 import transactionRoutes from "./routes/TransRoute.js";
+import goalRoutes from "./routes/goalRoutes.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.get("/", async (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/transactions", transactionRoutes);
+app.use("/api/goals", goalRoutes);
 
 app.use((error, req, res, next) => {
   console.error("Global error handler:", error);

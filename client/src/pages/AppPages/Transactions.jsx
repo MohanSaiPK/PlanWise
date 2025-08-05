@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PlusCircle, Search, Filter, X } from "lucide-react";
+import { PlusCircle, Search, Filter, X, Trash2 } from "lucide-react";
 import { Pie } from "react-chartjs-2";
 import "chart.js/auto";
 
@@ -93,6 +93,11 @@ const Transactions = () => {
     await fetchTransactions();
     setIsModalOpen(false);
     setNewExpense({ date: "", category: "Food", description: "", amount: "" });
+  };
+
+  const handleDetleteExpense = async (id) => {
+    await deleteTransaction(id);
+    await fetchTransactions();
   };
 
   const fetchTransactions = async () => {
@@ -209,6 +214,14 @@ const Transactions = () => {
                     </td>
                     <td className="p-3">{txn.description}</td>
                     <td className="p-3 font-semibold">₹{txn.amount}</td>
+
+                    <td
+                      className="p-3"
+                      onClick={() => handleDetleteExpense(txn._id)}
+                    >
+                      {" "}
+                      <Trash2 size={20} />{" "}
+                    </td>
                   </tr>
                 ))
               ) : (
