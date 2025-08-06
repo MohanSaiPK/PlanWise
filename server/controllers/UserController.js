@@ -12,24 +12,7 @@ export const updateUserSetup = async (req, res) => {
       payday,
       currency,
       avatar,
-      savingsGoal,
-      financialGoals,
     } = req.body;
-
-    const monthlyIncome =
-      Number(jobIncome) + Number(investmentIncome) + Number(sideIncome);
-
-    const isSetupComplete =
-      monthlyIncome !== null &&
-      monthlyIncome !== undefined &&
-      jobIncome !== null &&
-      jobIncome !== undefined &&
-      needsRatio !== null &&
-      needsRatio !== undefined &&
-      wantsRatio !== null &&
-      wantsRatio !== undefined &&
-      savingsRatio !== null &&
-      savingsRatio !== undefined;
 
     const updateUser = await User.findByIdAndUpdate(
       req.user._id,
@@ -37,16 +20,12 @@ export const updateUserSetup = async (req, res) => {
         jobIncome,
         investmentIncome,
         sideIncome,
-        monthlyIncome,
         needsRatio,
         wantsRatio,
         savingsRatio,
         payday,
         currency,
         avatar,
-        savingsGoal,
-        financialGoals,
-        isSetupComplete,
       },
       { new: true, runValidators: true }
     );
@@ -55,7 +34,7 @@ export const updateUserSetup = async (req, res) => {
       success: true,
       message: "Setup Completed",
       user: updateUser,
-      isSetupComplete: true,
+      isSetupComplete: updateUser.isSetupComplete,
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

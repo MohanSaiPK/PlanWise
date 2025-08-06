@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-
+import * as Slider from "@radix-ui/react-slider";
 import { useAuth } from "../../hooks/useAuth";
+import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 
 const FirstLogin = () => {
   const { setUser } = useAuth();
@@ -11,14 +12,12 @@ const FirstLogin = () => {
     jobIncome: "",
     investmentIncome: "",
     sideIncome: "",
-    needsRatio: "",
-    wantsRatio: "",
-    savingsRatio: "",
+    needsRatio: "4",
+    wantsRatio: "3",
+    savingsRatio: "3",
     payday: "",
     currency: "INR",
     avatar: "",
-    savingsGoal: "",
-    financialGoals: [],
   });
 
   const nextStep = () => setStep(step + 1);
@@ -31,6 +30,19 @@ const FirstLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const payload = {
+      jobIncome: Number(formData.jobIncome || 0),
+      investmentIncome: Number(formData.investmentIncome || 0),
+      sideIncome: Number(formData.sideIncome || 0),
+      needsRatio: Number(formData.needsRatio || 0),
+      wantsRatio: Number(formData.wantsRatio || 0),
+      savingsRatio: Number(formData.savingsRatio || 0),
+      payday: formData.payday,
+      currency: formData.currency,
+      avatar: formData.avatar,
+    };
+
     const token = localStorage.getItem("token");
     try {
       const res = await fetch("http://localhost:5000/api/user/setup", {
@@ -39,10 +51,10 @@ const FirstLogin = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
-      console.log(data);
       if (data.success) {
         setUser(data.user);
         navigate("/app/dashboard");
@@ -114,36 +126,167 @@ const Step1Income = ({ formData, handleChange }) => {
 };
 
 const Step2Budget = ({ formData, handleChange }) => {
+  const TOTAL_RATIO = 10;
+
+  // Local state for smooth dragging (avoids constant jumps)
+  const [ratios, setRatios] = useState({
+    needs: formData.needsRatio || 4,
+    wants: formData.wantsRatio || 3,
+    savings: formData.savingsRatio || 3,
+  });
+
+  const monthlyIncome =
+    Number(formData.jobIncome || 0) +
+    Number(formData.investmentIncome || 0) +
+    Number(formData.sideIncome || 0);
+
+  const { needsAmount, wantsAmount, savingsAmount } = useMemo(() => {
+    return {
+      needsAmount: ((ratios.needs / TOTAL_RATIO) * monthlyIncome).toFixed(2),
+      wantsAmount: ((ratios.wants / TOTAL_RATIO) * monthlyIncome).toFixed(2),
+      savingsAmount: ((ratios.savings / TOTAL_RATIO) * monthlyIncome).toFixed(
+        2
+      ),
+    };
+  }, [ratios, monthlyIncome]);
+
+  const COLORS = ["#22c55e", "#f59e0b", "#3b82f6"];
+
+  // Keep updating only the active slider while dragging
+  const handleDrag = (type, value) => {
+    setRatios((prev) => ({
+      ...prev,
+      [type]: value,
+    }));
+  };
+
+  // On release, auto-adjust other sliders so total = TOTAL_RATIO
+  const handleCommit = (type, value) => {
+    let newNeeds = ratios.needs;
+    let newWants = ratios.wants;
+    let newSavings = ratios.savings;
+
+    if (type === "needs") {
+      newNeeds = value;
+      const remaining = TOTAL_RATIO - newNeeds;
+      const half = Math.floor(remaining / 2);
+      newWants = half;
+      newSavings = remaining - half;
+    } else if (type === "wants") {
+      newWants = value;
+      newSavings = TOTAL_RATIO - newNeeds - newWants;
+    } else if (type === "savings") {
+      newSavings = value;
+      newWants = TOTAL_RATIO - newNeeds - newSavings;
+    }
+
+    // Prevent negatives
+    newNeeds = Math.max(0, newNeeds);
+    newWants = Math.max(0, newWants);
+    newSavings = Math.max(0, newSavings);
+
+    const updated = {
+      needs: newNeeds,
+      wants: newWants,
+      savings: newSavings,
+    };
+
+    setRatios(updated);
+    handleChange("needsRatio", updated.needs);
+    handleChange("wantsRatio", updated.wants);
+    handleChange("savingsRatio", updated.savings);
+  };
+
+  const data = [
+    { name: `Needs ₹${needsAmount}`, value: parseFloat(needsAmount) },
+    { name: `Wants ₹${wantsAmount}`, value: parseFloat(wantsAmount) },
+    { name: `Savings ₹${savingsAmount}`, value: parseFloat(savingsAmount) },
+  ];
+
   return (
-    <div className="flex flex-col space-y-6 border-2 p-16 rounded-2xl">
-      <h2 className="text-3xl">Budget Allocation</h2>
-      <div className="flex space-x-6 items-center  justify-around w-80">
-        <label className="text-xl">Needs</label>
-        <input
-          type="number"
-          value={formData.needsRatio}
-          onChange={(e) => handleChange("needsRatio", e.target.value)}
-          className="p-4"
-        />
+    <div className="flex flex-col items-center space-y-8 border-2 p-10 rounded-2xl w-[500px]">
+      <h2 className="text-3xl font-semibold">
+        Budget Allocation (Total = {TOTAL_RATIO})
+      </h2>
+      <p className="text-lg">
+        Monthly Income: <strong>₹{monthlyIncome}</strong>
+      </p>
+
+      {/* Needs */}
+      <div className="w-full">
+        <label className="block text-xl mb-2">Needs ({ratios.needs})</label>
+        <Slider.Root
+          value={[ratios.needs]}
+          onValueChange={(val) => handleDrag("needs", val[0])}
+          onValueCommit={(val) => handleCommit("needs", val[0])}
+          max={TOTAL_RATIO}
+          step={1}
+          className="relative flex items-center w-full select-none"
+        >
+          <Slider.Track className="bg-gray-300 grow rounded-full h-2">
+            <Slider.Range className="absolute bg-green-500 rounded-full h-full" />
+          </Slider.Track>
+          <Slider.Thumb className="block w-5 h-5 bg-green-600 rounded-full" />
+        </Slider.Root>
+        <p>₹{needsAmount}</p>
       </div>
-      <div className="flex space-x-6 items-center  justify-around w-80">
-        <label className="text-xl">Wants</label>
-        <input
-          type="number"
-          value={formData.wantsRatio}
-          onChange={(e) => handleChange("wantsRatio", e.target.value)}
-          className="p-4"
-        />
+
+      {/* Wants */}
+      <div className="w-full">
+        <label className="block text-xl mb-2">Wants ({ratios.wants})</label>
+        <Slider.Root
+          value={[ratios.wants]}
+          onValueChange={(val) => handleDrag("wants", val[0])}
+          onValueCommit={(val) => handleCommit("wants", val[0])}
+          max={TOTAL_RATIO}
+          step={1}
+          className="relative flex items-center w-full select-none"
+        >
+          <Slider.Track className="bg-gray-300 grow rounded-full h-2">
+            <Slider.Range className="absolute bg-yellow-500 rounded-full h-full" />
+          </Slider.Track>
+          <Slider.Thumb className="block w-5 h-5 bg-yellow-600 rounded-full" />
+        </Slider.Root>
+        <p>₹{wantsAmount}</p>
       </div>
-      <div className="flex space-x-6 items-center  justify-around w-80">
-        <label className="text-xl">Savings</label>
-        <input
-          type="number"
-          value={formData.savingsRatio}
-          onChange={(e) => handleChange("savingsRatio", e.target.value)}
-          className="p-4"
-        />
+
+      {/* Savings */}
+      <div className="w-full">
+        <label className="block text-xl mb-2">Savings ({ratios.savings})</label>
+        <Slider.Root
+          value={[ratios.savings]}
+          onValueChange={(val) => handleDrag("savings", val[0])}
+          onValueCommit={(val) => handleCommit("savings", val[0])}
+          max={TOTAL_RATIO}
+          step={1}
+          className="relative flex items-center w-full select-none"
+        >
+          <Slider.Track className="bg-gray-300 grow rounded-full h-2">
+            <Slider.Range className="absolute bg-blue-500 rounded-full h-full" />
+          </Slider.Track>
+          <Slider.Thumb className="block w-5 h-5 bg-blue-600 rounded-full" />
+        </Slider.Root>
+        <p>₹{savingsAmount}</p>
       </div>
+
+      {/* Chart */}
+      <PieChart width={300} height={250}>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          outerRadius={80}
+          fill="#8884d8"
+          dataKey="value"
+        >
+          {data.map((entry, idx) => (
+            <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
     </div>
   );
 };
@@ -151,7 +294,7 @@ const Step2Budget = ({ formData, handleChange }) => {
 const Step3Profile = ({ formData, handleChange }) => {
   return (
     <div className="flex flex-col justify-between items-center space-y-6 border-2 p-16 rounded-2xl">
-      <h2 className="text-3xl">Profile & Goals</h2>
+      <h2 className="text-3xl">Profile</h2>
       <div className="flex space-x-6 items-center justify-around w-128">
         <label className="text-xl">Payday</label>
         <input
@@ -172,15 +315,6 @@ const Step3Profile = ({ formData, handleChange }) => {
           <option value="INR">INR</option>
           <option value="GBP">GBP</option>
         </select>
-      </div>
-      <div className="flex space-x-6 items-center justify-around  w-128">
-        <label className="text-xl">Monthly Saving Goal</label>
-        <input
-          type="number"
-          value={formData.savingsGoal}
-          onChange={(e) => handleChange("savingsGoal", e.target.value)}
-          className="p-4"
-        />
       </div>
     </div>
   );

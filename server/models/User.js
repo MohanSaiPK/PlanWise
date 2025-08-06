@@ -5,32 +5,65 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
-  monthlyIncome: { type: Number, default: null },
-  jobIncome: { type: Number, default: null },
-  investmentIncome: { type: Number, default: null },
-  sideIncome: { type: Number, default: null },
-  needsRatio: { type: Number, default: null },
-  wantsRatio: { type: Number, default: null },
-  savingsRatio: { type: Number, default: null },
+
+  // Incomes
+  monthlyIncome: { type: Number, default: 0 },
+  jobIncome: { type: Number, default: 0 },
+  investmentIncome: { type: Number, default: 0 },
+  sideIncome: { type: Number, default: 0 },
+
+  // Ratios
+  needsRatio: { type: Number, default: 4 },
+  wantsRatio: { type: Number, default: 3 },
+  savingsRatio: { type: Number, default: 3 },
+
+  // Calculated allocations
+  needsAmount: { type: Number, default: 0 },
+  wantsAmount: { type: Number, default: 0 },
+  savingsAmount: { type: Number, default: 0 },
+
+  // Profile
   payday: { type: String },
   currency: { type: String, default: "INR" },
   avatar: { type: String },
-  savingsGoal: { type: Number, default: null },
-  financialGoals: [{ type: String }],
+
+  // Setup completion
+  isSetupComplete: { type: Boolean, default: false },
 });
 
+// Auto-calc before update
 UserSchema.pre("findOneAndUpdate", function (next) {
-  const update = this.getUpdate();
-  if (
-    update.jobIncome !== undefined ||
-    update.investmentIncome !== undefined ||
-    update.sideIncome !== undefined
-  ) {
-    const jobIncome = Number(update.jobIncome || 0);
-    const investmentIncome = Number(update.investmentIncome || 0);
-    const sideIncome = Number(update.sideIncome || 0);
-    update.monthlyIncome = jobIncome + investmentIncome + sideIncome;
+  const update = this.getUpdate() || {};
+
+  const jobIncome = Number(update.jobIncome ?? this.get("jobIncome") ?? 0);
+  const investmentIncome = Number(
+    update.investmentIncome ?? this.get("investmentIncome") ?? 0
+  );
+  const sideIncome = Number(update.sideIncome ?? this.get("sideIncome") ?? 0);
+
+  const monthlyIncome = jobIncome + investmentIncome + sideIncome;
+  update.monthlyIncome = monthlyIncome;
+
+  const needsRatio = Number(update.needsRatio ?? this.get("needsRatio") ?? 0);
+  const wantsRatio = Number(update.wantsRatio ?? this.get("wantsRatio") ?? 0);
+  const savingsRatio = Number(
+    update.savingsRatio ?? this.get("savingsRatio") ?? 0
+  );
+
+  const totalRatio = needsRatio + wantsRatio + savingsRatio;
+
+  if (totalRatio > 0 && monthlyIncome > 0) {
+    update.needsAmount = (needsRatio / totalRatio) * monthlyIncome;
+    update.wantsAmount = (wantsRatio / totalRatio) * monthlyIncome;
+    update.savingsAmount = (savingsRatio / totalRatio) * monthlyIncome;
   }
+
+  update.isSetupComplete =
+    monthlyIncome > 0 &&
+    needsRatio >= 0 &&
+    wantsRatio >= 0 &&
+    savingsRatio >= 0;
+
   next();
 });
 
