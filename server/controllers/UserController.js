@@ -40,3 +40,53 @@ export const updateUserSetup = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+export const getFinancialSnapshot = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select(
+      "monthlyIncome savingsAmount needsAmount wantsAmount"
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      snapshot: {
+        monthlyIncome: user.monthlyIncome,
+        savingsAmount: user.savingsAmount,
+        needsAmount: user.needsAmount,
+        wantsAmount: user.wantsAmount,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getIncome = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select(
+      "monthlyIncome jobIncome investmentIncome sideIncome"
+    );
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    res.json({
+      success: true,
+      income: {
+        monthlyIncome: user.monthlyIncome,
+        jobIncome: user.jobIncome,
+        investmentIncome: user.investmentIncome,
+        sideIncome: user.sideIncome,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
