@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 
   // Incomes
-  monthlyIncome: { type: Number, default: 0 },
+  baseIncome: { type: Number, default: 0 },
   jobIncome: { type: Number, default: 0 },
   investmentIncome: { type: Number, default: 0 },
   sideIncome: { type: Number, default: 0 },
@@ -41,8 +41,8 @@ UserSchema.pre("findOneAndUpdate", function (next) {
   );
   const sideIncome = Number(update.sideIncome ?? this.get("sideIncome") ?? 0);
 
-  const monthlyIncome = jobIncome + investmentIncome + sideIncome;
-  update.monthlyIncome = monthlyIncome;
+  const baseIncome = jobIncome + investmentIncome + sideIncome;
+  update.baseIncome = baseIncome;
 
   const needsRatio = Number(update.needsRatio ?? this.get("needsRatio") ?? 0);
   const wantsRatio = Number(update.wantsRatio ?? this.get("wantsRatio") ?? 0);
@@ -52,17 +52,14 @@ UserSchema.pre("findOneAndUpdate", function (next) {
 
   const totalRatio = needsRatio + wantsRatio + savingsRatio;
 
-  if (totalRatio > 0 && monthlyIncome > 0) {
-    update.needsAmount = (needsRatio / totalRatio) * monthlyIncome;
-    update.wantsAmount = (wantsRatio / totalRatio) * monthlyIncome;
-    update.savingsAmount = (savingsRatio / totalRatio) * monthlyIncome;
+  if (totalRatio > 0 && baseIncome > 0) {
+    update.needsAmount = (needsRatio / totalRatio) * baseIncome;
+    update.wantsAmount = (wantsRatio / totalRatio) * baseIncome;
+    update.savingsAmount = (savingsRatio / totalRatio) * baseIncome;
   }
 
   update.isSetupComplete =
-    monthlyIncome > 0 &&
-    needsRatio >= 0 &&
-    wantsRatio >= 0 &&
-    savingsRatio >= 0;
+    baseIncome > 0 && needsRatio >= 0 && wantsRatio >= 0 && savingsRatio >= 0;
 
   next();
 });

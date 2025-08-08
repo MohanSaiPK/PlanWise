@@ -1,125 +1,65 @@
 import React, { useEffect, useState } from "react";
 import { PlusCircle, Search, Filter, X, Trash2 } from "lucide-react";
-import { Pie } from "react-chartjs-2";
-import "chart.js/auto";
 
 const Transactions = () => {
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Dummy expense data
-  const [transactions, setTransactions] = useState([
-    //   {
-    //     id: 1,
-    //     date: "2025-08-01",
-    //     category: "Food",
-    //     description: "Groceries",
-    //     amount: 1200,
-    //   },
-    //   {
-    //     id: 2,
-    //     date: "2025-08-02",
-    //     category: "Transport",
-    //     description: "Uber ride",
-    //     amount: 450,
-    //   },
-    //   {
-    //     id: 3,
-    //     date: "2025-08-03",
-    //     category: "Entertainment",
-    //     description: "Netflix",
-    //     amount: 499,
-    //   },
-    //   {
-    //     id: 4,
-    //     date: "2025-08-04",
-    //     category: "Bills",
-    //     description: "Electricity Bill",
-    //     amount: 1500,
-    //   },
-    //
-  ]);
-
-  useEffect(() => {
-    // Fetch data from API
-    fetchTransactions();
-  }, []);
-
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isExpModalOpen, setIsExpModalOpen] = useState(false);
+  const [isIncModalOpen, setIsIncModalOpen] = useState(false);
+
   const [newExpense, setNewExpense] = useState({
     date: "",
+    time: "",
     category: "Food",
     description: "",
     amount: "",
   });
 
-  // Filter transactions
-  const filteredTransactions = transactions.filter((t) => {
-    return (
-      (filterCategory === "All" || t.category === filterCategory) &&
-      (t.description.toLowerCase().includes(search.toLowerCase()) ||
-        t.category.toLowerCase().includes(search.toLowerCase()))
-    );
+  const [newIncome, setNewIncome] = useState({
+    date: "",
+    time: "",
+    category: "Bonus",
+    description: "",
+    amount: "",
   });
 
-  // Pie chart data
-  const categoryTotals = transactions.reduce((acc, t) => {
-    acc[t.category] = (acc[t.category] || 0) + t.amount;
-    return acc;
-  }, {});
-
-  const chartData = {
-    labels: Object.keys(categoryTotals),
-    datasets: [
-      {
-        data: Object.values(categoryTotals),
-        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
-      },
-    ],
-  };
-
-  // Add new expense
-  const handleAddExpense = async () => {
-    if (!newExpense.date || !newExpense.description || !newExpense.amount) {
-      alert("Please fill in all fields");
-      return;
-    }
-    await addTransaction({
-      ...newExpense,
-      amount: Number(newExpense.amount),
-      type: "expense",
-    });
-    await fetchTransactions();
-    setIsModalOpen(false);
-    setNewExpense({ date: "", category: "Food", description: "", amount: "" });
-  };
-
-  const handleDetleteExpense = async (id) => {
-    await deleteTransaction(id);
-    await fetchTransactions();
-  };
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
 
   const fetchTransactions = async () => {
     setLoading(true);
-
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch("http://localhost:5000/api/transactions", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await response.json();
+      const data = await res.json();
       setTransactions(data);
-    } catch (error) {
-      console.error("error fetching", error);
+    } catch (err) {
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const addTransaction = async (newTxn) => {
+  const handleAddTransaction = async (txn, type) => {
+    if (!txn.description || !txn.amount) {
+      alert("All fields are required.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:5000/api/transactions", {
+    const newTxn = {
+      ...txn,
+      type,
+      amount: Number(txn.amount),
+    };
+
+    const res = await fetch("http://localhost:5000/api/transactions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -127,42 +67,115 @@ const Transactions = () => {
       },
       body: JSON.stringify(newTxn),
     });
-    const data = await response.json();
-    setTransactions((prev) => [data, ...prev]);
+
+    const savedTxn = await res.json();
+    setTransactions((prev) => [savedTxn, ...prev]);
+
+    setIsExpModalOpen(false);
+    setIsIncModalOpen(false);
+    setNewExpense({
+      date: "",
+      time: "",
+      category: "Food",
+      description: "",
+      amount: "",
+    });
+    setNewIncome({
+      date: "",
+      time: "",
+      category: "Bonus",
+      description: "",
+      amount: "",
+    });
   };
 
-  const deleteTransaction = async (id) => {
+  const handleDeleteTransaction = async (id) => {
     const token = localStorage.getItem("token");
     await fetch(`http://localhost:5000/api/transactions/${id}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
     setTransactions((prev) => prev.filter((txn) => txn._id !== id));
   };
 
+  const openExpenseModal = () => {
+    const now = new Date();
+    setNewExpense({
+      ...newExpense,
+      date: now.toISOString(),
+      time: now.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      }),
+    });
+    setIsExpModalOpen(true);
+  };
+
+  const openIncomeModal = () => {
+    const now = new Date();
+    setNewIncome({
+      ...newIncome,
+      date: now.toISOString(),
+      time: now.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      }),
+    });
+    setIsIncModalOpen(true);
+  };
+
+  // Filter for current month
+  const currentMonthTransactions = transactions.filter((t) => {
+    const txnDate = new Date(t.date);
+    const now = new Date();
+    return (
+      txnDate.getMonth() === now.getMonth() &&
+      txnDate.getFullYear() === now.getFullYear()
+    );
+  });
+
+  // Filtered with search/category
+  const filteredTransactions = currentMonthTransactions.filter((t) => {
+    const matchCategory =
+      filterCategory === "All" || t.category === filterCategory;
+    const matchSearch =
+      t.description.toLowerCase().includes(search.toLowerCase()) ||
+      t.category.toLowerCase().includes(search.toLowerCase());
+    return matchCategory && matchSearch;
+  });
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold">Transactions</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
-        >
-          <PlusCircle size={20} />
-          <span>Add Expense</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={openExpenseModal}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
+          >
+            <PlusCircle size={20} />
+            <span>Add Expense</span>
+          </button>
+          <button
+            onClick={openIncomeModal}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700"
+          >
+            <PlusCircle size={20} />
+            <span>Add Income</span>
+          </button>
+        </div>
       </div>
 
-      {/* Search & Filters */}
-      <div className="flex space-x-4 items-center">
+      {/* Search & Filter */}
+      <div className="flex gap-4 items-center">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           <input
             type="text"
-            placeholder="Search transactions..."
+            placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border pl-10 pr-4 py-2 rounded-lg"
@@ -175,29 +188,33 @@ const Transactions = () => {
             onChange={(e) => setFilterCategory(e.target.value)}
             className="border pl-10 pr-4 py-2 rounded-lg"
           >
-            <option value="All">All Categories</option>
+            <option value="All">All</option>
             <option value="Food">Food</option>
             <option value="Transport">Transport</option>
             <option value="Entertainment">Entertainment</option>
             <option value="Bills">Bills</option>
+            <option value="Bonus">Bonus</option>
+            <option value="Business">Business</option>
+            <option value="Investments">Investments</option>
+            <option value="Other">Other</option>
           </select>
         </div>
       </div>
 
       {/* Table */}
       {loading ? (
-        <div className="flex justify-center items-center h-screen">
-          <h1>Loading....</h1>
-        </div>
+        <div className="flex justify-center items-center h-40">Loading...</div>
       ) : (
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead className="bg-gray-100">
               <tr>
                 <th className="p-3">Date</th>
+                <th className="p-3">Type</th>
                 <th className="p-3">Category</th>
                 <th className="p-3">Description</th>
                 <th className="p-3">Amount</th>
+                <th className="p-3">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -207,27 +224,22 @@ const Transactions = () => {
                     <td className="p-3">
                       {new Date(txn.date).toLocaleDateString()}
                     </td>
-                    <td className="p-3">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-                        {txn.category}
-                      </span>
-                    </td>
+                    <td className="p-3 capitalize">{txn.type}</td>
+                    <td className="p-3">{txn.category}</td>
                     <td className="p-3">{txn.description}</td>
                     <td className="p-3 font-semibold">₹{txn.amount}</td>
-
                     <td
-                      className="p-3"
-                      onClick={() => handleDetleteExpense(txn._id)}
+                      className="p-3 cursor-pointer"
+                      onClick={() => handleDeleteTransaction(txn._id)}
                     >
-                      {" "}
-                      <Trash2 size={20} />{" "}
+                      <Trash2 size={18} />
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="p-3 text-center text-gray-500">
-                    No transactions found
+                  <td colSpan="6" className="p-3 text-center text-gray-500">
+                    No transactions this month.
                   </td>
                 </tr>
               )}
@@ -236,71 +248,92 @@ const Transactions = () => {
         </div>
       )}
 
-      {/* Chart */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Expense Breakdown</h2>
-        <Pie data={chartData} />
-      </div>
+      {/* Expense Modal */}
+      {isExpModalOpen && (
+        <Modal
+          title="Add Expense"
+          onClose={() => setIsExpModalOpen(false)}
+          onSubmit={() => handleAddTransaction(newExpense, "expense")}
+        >
+          <ModalForm txn={newExpense} setTxn={setNewExpense} isExpense />
+        </Modal>
+      )}
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Add New Expense</h2>
-              <button onClick={() => setIsModalOpen(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            <input
-              type="date"
-              value={newExpense.date}
-              onChange={(e) =>
-                setNewExpense({ ...newExpense, date: e.target.value })
-              }
-              className="border p-2 w-full rounded"
-            />
-            <select
-              value={newExpense.category}
-              onChange={(e) =>
-                setNewExpense({ ...newExpense, category: e.target.value })
-              }
-              className="border p-2 w-full rounded"
-            >
-              <option value="Food">Food</option>
-              <option value="Transport">Transport</option>
-              <option value="Entertainment">Entertainment</option>
-              <option value="Bills">Bills</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Description"
-              value={newExpense.description}
-              onChange={(e) =>
-                setNewExpense({ ...newExpense, description: e.target.value })
-              }
-              className="border p-2 w-full rounded"
-            />
-            <input
-              type="number"
-              placeholder="Amount"
-              value={newExpense.amount}
-              onChange={(e) =>
-                setNewExpense({ ...newExpense, amount: e.target.value })
-              }
-              className="border p-2 w-full rounded"
-            />
-            <button
-              onClick={handleAddExpense}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg w-full hover:bg-blue-700"
-            >
-              Add Expense
-            </button>
-          </div>
-        </div>
+      {/* Income Modal */}
+      {isIncModalOpen && (
+        <Modal
+          title="Add Income"
+          onClose={() => setIsIncModalOpen(false)}
+          onSubmit={() => handleAddTransaction(newIncome, "income")}
+        >
+          <ModalForm txn={newIncome} setTxn={setNewIncome} />
+        </Modal>
       )}
     </div>
   );
 };
+
+const Modal = ({ title, onClose, onSubmit, children }) => (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <button onClick={onClose}>
+          <X size={20} />
+        </button>
+      </div>
+      {children}
+      <button
+        onClick={onSubmit}
+        className="bg-blue-600 text-white px-4 py-2 rounded-lg w-full hover:bg-blue-700"
+      >
+        {title}
+      </button>
+    </div>
+  </div>
+);
+
+const ModalForm = ({ txn, setTxn, isExpense = false }) => (
+  <>
+    <p>
+      {new Date(txn.date).toLocaleDateString()} - {txn.time}
+    </p>
+    <select
+      value={txn.category}
+      onChange={(e) => setTxn({ ...txn, category: e.target.value })}
+      className="border p-2 w-full rounded"
+    >
+      {isExpense ? (
+        <>
+          <option value="Food">Food</option>
+          <option value="Transport">Transport</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Bills">Bills</option>
+        </>
+      ) : (
+        <>
+          <option value="Bonus">Bonus</option>
+          <option value="Business">Business</option>
+          <option value="Investments">Investments</option>
+          <option value="Other">Other</option>
+        </>
+      )}
+    </select>
+    <input
+      type="text"
+      placeholder="Description"
+      value={txn.description}
+      onChange={(e) => setTxn({ ...txn, description: e.target.value })}
+      className="border p-2 w-full rounded"
+    />
+    <input
+      type="number"
+      placeholder="Amount"
+      value={txn.amount}
+      onChange={(e) => setTxn({ ...txn, amount: e.target.value })}
+      className="border p-2 w-full rounded"
+    />
+  </>
+);
 
 export default Transactions;

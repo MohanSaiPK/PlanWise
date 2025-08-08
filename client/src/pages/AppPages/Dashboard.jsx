@@ -3,14 +3,18 @@ import { useState, useEffect } from "react";
 import { Pie, Tooltip, Cell, PieChart } from "recharts";
 
 const Dashboard = () => {
-  const [monthlyIncome, setMonthlyIncome] = useState(null);
+  // const [monthlyIncome, setMonthlyIncome] = useState(null);
   const [jobIncome, setJobIncome] = useState(null);
   const [investmentIncome, setInvestmentIncome] = useState(null);
   const [sideIncome, setSideIncome] = useState(null);
+  const [baseIncome, setBaseIncome] = useState(null);
+  const [totalIncome, setTotalIncome] = useState(null);
+  const [additionalIncome, setAdditionalIncome] = useState(null);
+  const [totalExpenses, setTotalExpenses] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5000/api/user/income", {
+    fetch("http://localhost:5000/api/user/user-base-income", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -18,14 +22,30 @@ const Dashboard = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setMonthlyIncome(data.income.monthlyIncome);
           setJobIncome(data.income.jobIncome);
           setInvestmentIncome(data.income.investmentIncome);
           setSideIncome(data.income.sideIncome);
         }
       })
       .catch((err) => console.log(err));
+
+    fetch("http://localhost:5000/api/income-expense", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setBaseIncome(data.baseIncome);
+          setTotalIncome(data.totalIncome);
+          setAdditionalIncome(data.additionalIncome);
+          setTotalExpenses(data.totalExpenses);
+        }
+      })
+      .catch((err) => console.log(err));
   }, []);
+
   const incomeData = [
     {
       name: "Job Income",
@@ -46,10 +66,22 @@ const Dashboard = () => {
         <h1 className="text-4xl">Dashboard</h1>
         <div className="border-2 rounded-xl w-64 h-20">
           <h1>
-            Monthly Income:{" "}
-            {monthlyIncome !== null ? `$ ${monthlyIncome}` : "-Loading"}
+            Base Income: {baseIncome !== null ? `$ ${baseIncome}` : "-Loading"}
           </h1>
-          <h1>Remaining:</h1>
+          <h1>
+            Additional Income:{" "}
+            {additionalIncome !== null ? `$ ${additionalIncome}` : "-Loading"}
+          </h1>
+          <h1>
+            Total Income:{" "}
+            {totalIncome !== null ? `$ ${totalIncome}` : "-Loading"}
+          </h1>
+          <h1>
+            Remaining:{" "}
+            {totalIncome !== null && totalExpenses !== null
+              ? `$ ${totalIncome - totalExpenses}`
+              : "-Loading"}
+          </h1>
         </div>
       </div>
       <div className="w-full flex p-10 space-x-6 h-128 ">

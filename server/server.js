@@ -2,10 +2,11 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import authRoutes from "./routes/auth.js";
+import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/UserRoute.js";
 import transactionRoutes from "./routes/TransRoute.js";
 import goalRoutes from "./routes/goalRoutes.js";
+import incomeRoutes from "./routes/incomeRoutes.js";
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/goals", goalRoutes);
+app.use("/api/income-expense", incomeRoutes);
 
 app.use((error, req, res, next) => {
   console.error("Global error handler:", error);
