@@ -38,9 +38,15 @@ const Transactions = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setTransactions(data);
+      if (data.success && Array.isArray(data.transactions)) {
+        setTransactions(data.transactions);
+      } else {
+        setTransactions([]);
+        console.error("API error or invalid response:", data);
+      }
     } catch (err) {
       console.error("Fetch error:", err);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }

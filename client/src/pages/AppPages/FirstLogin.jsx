@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import * as Slider from "@radix-ui/react-slider";
 import { useAuth } from "../../hooks/useAuth";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { useEffect } from "react";
 
 const FirstLogin = () => {
   const { setUser } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+
   const [formData, setFormData] = useState({
     jobIncome: "",
     investmentIncome: "",
@@ -88,9 +90,31 @@ const FirstLogin = () => {
 };
 
 const Step1Income = ({ formData, handleChange }) => {
+  const [userData, setUserData] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:5000/api/user/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setUserData(data.user);
+          console.log("User profile fetched:", data.user);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching user profile:", error);
+      });
+  }, []);
+
   return (
     <div className="flex flex-col space-y-6 border-2 p-16 rounded-2xl">
       <h2 className="text-3xl">Your Monthly Income Sources</h2>
+      <p className="text-lg">User: {userData.name}</p>
       <div className="flex space-x-6 items-center justify-around w-128">
         <label className="text-xl">Job Income</label>
         <input
