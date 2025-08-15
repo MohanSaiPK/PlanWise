@@ -199,9 +199,7 @@ const Goals = () => {
                   type="date"
                   className="w-full p-2 border rounded-md"
                   value={newGoal.startDate}
-                  onChange={(e) =>
-                    setNewGoal({ ...newGoal, startDate: e.target.value })
-                  }
+                  disabled
                 />
               </div>
 

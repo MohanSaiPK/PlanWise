@@ -1,9 +1,21 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { Pie, Tooltip, Cell, PieChart } from "recharts";
+import {
+  Pie,
+  Tooltip,
+  Cell,
+  PieChart,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { GaugeComponent } from "react-gauge-component";
 
 const Dashboard = () => {
-  // const [monthlyIncome, setMonthlyIncome] = useState(null);
   const [jobIncome, setJobIncome] = useState(null);
   const [investmentIncome, setInvestmentIncome] = useState(null);
   const [sideIncome, setSideIncome] = useState(null);
@@ -83,7 +95,7 @@ const Dashboard = () => {
 
   const fetchRecentTransaction = async () => {
     const token = localStorage.getItem("token");
-    setLoading(true);
+
     try {
       const res = await fetch("http://localhost:5000/api/transactions", {
         headers: {
@@ -101,55 +113,90 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-  function getDaysSincePayday(payDay) {
+
+  function getDaysInPayCycle(payDayDate) {
+    // Gets the year and month of the payday, then finds the last day of that month.
+    return new Date(
+      payDayDate.getFullYear(),
+      payDayDate.getMonth() + 1,
+      0
+    ).getDate();
+  }
+
+  function getDaysSincePayday(payDayDate) {
     const today = new Date();
-    const todayDay = today.getDate();
-    let paydayDay =
-      typeof payDay === "string" && payDay.length > 2
-        ? new Date(payDay).getDate()
-        : Number(payDay);
+    // Set time to 0 to compare dates only, preventing partial day issues.
+    today.setHours(0, 0, 0, 0);
+    payDayDate.setHours(0, 0, 0, 0);
 
-    if (isNaN(paydayDay)) return null;
+    // Difference in milliseconds converted to days
+    const diffTime = Math.abs(today - payDayDate);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
 
-    if (todayDay >= paydayDay) {
-      return todayDay - paydayDay;
-    } else {
-      // Payday was last month
-      const daysInLastMonth = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        0
-      ).getDate();
-      return todayDay + (daysInLastMonth - paydayDay);
+  function getSpendingSpeed(payDayString, totalIncome, totalExpenses) {
+    // Check for invalid or missing inputs
+    if (
+      !payDayString ||
+      !totalIncome ||
+      totalExpenses === null ||
+      totalExpenses < 0
+    ) {
+      return 0;
+    }
+
+    const payDayDate = new Date(payDayString);
+    if (isNaN(payDayDate.getTime())) return "Invalid Date";
+
+    const daysSincePayday = getDaysSincePayday(payDayDate);
+    const daysInCycle = getDaysInPayCycle(payDayDate);
+
+    // If it's past the cycle, this logic doesn't apply.
+    if (daysSincePayday > daysInCycle) return "Cycle Over";
+
+    const daysRemaining = daysInCycle - daysSincePayday;
+    // Calculate percentage of the cycle remaining
+    const percentCycleRemaining = (daysRemaining / daysInCycle) * 100;
+
+    const budgetRemaining = totalIncome - totalExpenses;
+    // Calculate percentage of the budget remaining
+    const percentBudgetRemaining = (budgetRemaining / totalIncome) * 100;
+
+    // This is the core metric: the "buffer" between your money and time.
+    const buffer = percentBudgetRemaining - percentCycleRemaining;
+
+    // You can tweak these thresholds for the gauge chart.
+    if (buffer < -15) {
+      return 90; // You have significantly less money % than time % left.
+    } else if (buffer < -10) {
+      return 80; // You have less money % than time % left.
+    } else if (buffer < -5) {
+      return 70; // You have less money % than time % left.
+    } else if (buffer < 0) {
+      return 60; // You're on track, but with little to no buffer.
+    } else if (buffer < 5) {
+      return 50; // You're on track, but with little to no buffer.
+    } else if (buffer < 10) {
+      return 40; // You're on track, but with a small buffer.
+    } else if (buffer < 15) {
+      return 30; // You're on track, but with a moderate buffer.
+    } else if (buffer < 20) {
+      return 20; // You're on track, but with a moderate buffer.
+    } else if (buffer < 25) {
+      return 10; // You're on track, but with a good buffer.
+    } else if (buffer >= 25) {
+      return 0; // You're in a great position!
     }
   }
 
-  function getSpendingSpeed(payDay, totalIncome, totalExpenses) {
-    if (!payDay || !totalIncome || !totalExpenses) return "N/A";
-
-    const daysSincePayday = getDaysSincePayday(payDay);
-    const ratio =
-      totalIncome && totalExpenses ? totalExpenses / totalIncome : 0;
-
-    // Example logic (tweak as you wish):
-    if (ratio > 0.9) return "Danger: High Speed";
-    if (daysSincePayday < 15 && ratio > 0.7) return "Danger: High Speed";
-
-    // Medium: spent >70% but not in first half, or spent >50% in first half
-    if (ratio > 0.7) return "Medium Speed";
-    if (daysSincePayday < 15 && ratio > 0.5) return "Medium Speed";
-
-    // Good: spent <=50% in first half, or <=70% in second half
-    if (ratio <= 0.5 && daysSincePayday < 15) return "Good Speed";
-    if (ratio <= 0.7 && daysSincePayday >= 15) return "Good Speed";
-    return "Monitor Spending";
-  }
-
   useEffect(() => {
-    fetchBaseIncome();
-    fetchMonthlyIncomeExpense();
-    fetchRecentTransaction();
-    fetchProfile();
+    setLoading(true);
+    Promise.all([
+      fetchBaseIncome(),
+      fetchMonthlyIncomeExpense(),
+      fetchRecentTransaction(),
+      fetchProfile(),
+    ]).finally(() => setLoading(false));
   }, []);
 
   const incomeData = [
@@ -164,6 +211,18 @@ const Dashboard = () => {
     {
       name: "Side Income",
       value: sideIncome,
+    },
+  ];
+
+  const totalData = [
+    {
+      name:
+        new Date().toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        }) + " Total",
+      exp: totalExpenses,
+      rem: totalIncome - totalExpenses,
     },
   ];
 
@@ -189,6 +248,12 @@ const Dashboard = () => {
             {totalIncome !== null && !loading ? `$ ${totalIncome}` : "-Loading"}
           </h1>
           <h1>
+            Total Expenses:{" "}
+            {totalExpenses !== null && !loading
+              ? `$ ${totalExpenses}`
+              : "-Loading"}
+          </h1>
+          <h1>
             Remaining:{" "}
             {totalIncome !== null && totalExpenses !== null
               ? `$ ${totalIncome - totalExpenses}`
@@ -206,10 +271,43 @@ const Dashboard = () => {
           <div className="flex h-36 space-x-4">
             <div className="border-2 w-1/3  rounded-xl">Savings Goal</div>
             <div className="border-2 w-1/3  rounded-xl">
-              Spending Speed:
-              {getSpendingSpeed(payDay, totalIncome, totalExpenses)}
-              <br />
-              payDay: {payDay}
+              <div>Spending Speed:</div>
+              <GaugeComponent
+                style={{
+                  height: "100px",
+                  width: "100%",
+                  padding: "10px",
+                  border: "2px solid black",
+                }}
+                type="radial"
+                arc={{
+                  style: {
+                    width: "50%",
+                    padding: "10px",
+                    border: "2px solid black",
+                  },
+                  colorArray: ["#00FF15", "#FF2121"],
+                  padding: 0.03,
+                  subArcs: [
+                    { limit: 40 },
+                    { limit: 60 },
+                    { limit: 70 },
+                    { limit: 80 },
+                    { limit: 90 },
+                    { limit: 100 },
+                  ],
+                }}
+                labels={{
+                  valueLabel: {
+                    matchColorWithArc: true,
+                  },
+                  tickLabels: {
+                    hideMinMax: true,
+                  },
+                }}
+                pointer={{ type: "needle", animationDelay: 1000 }}
+                value={getSpendingSpeed(payDay, totalIncome, totalExpenses)}
+              />
             </div>
             <div className="border-2 w-1/3  rounded-xl">
               <p>Recent Transactions</p>
@@ -226,7 +324,30 @@ const Dashboard = () => {
         <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
           <h1 className="w-full">Financial Health Overview</h1>
           <div className="flex w-full h-64 space-x-6 ">
-            <div className="w-1/2  border-2">Chart1 income vs expense</div>
+            <div className="w-1/2  border-2">
+              <p>Chart1 income vs expense</p>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  width={100}
+                  height={300}
+                  data={totalData}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="exp" stackId="a" fill="#8884d8" />
+                  <Bar dataKey="rem" stackId="a" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
             <div className="w-1/2  border-2">
               <h1>Income Source Distribution</h1>
               <PieChart width={300} height={300} className="p-6 flex">
