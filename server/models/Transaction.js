@@ -26,6 +26,7 @@ const transactionSchema = new mongoose.Schema({
       "Business",
       "Investments",
       "Other",
+      "Goal",
     ],
   },
   description: {

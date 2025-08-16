@@ -203,6 +203,7 @@ const Transactions = () => {
             <option value="Business">Business</option>
             <option value="Investments">Investments</option>
             <option value="Other">Other</option>
+            <option value="Goal">Goal</option>
           </select>
         </div>
       </div>

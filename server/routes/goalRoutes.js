@@ -8,6 +8,7 @@ import {
   allocateToGoal,
   distributeRemaining,
 } from "../controllers/GoalController.js";
+import { addToGoalWallet } from "../controllers/TransController.js";
 
 const router = express.Router();
 
@@ -18,5 +19,7 @@ router.delete("/:goalId", protect, deleteGoal);
 
 router.post("/allocate", protect, allocateToGoal);
 router.post("/distribute", protect, distributeRemaining);
+console.log("Goal routes loaded successfully");
+router.post("/wallet", protect, addToGoalWallet);
 
 export default router;

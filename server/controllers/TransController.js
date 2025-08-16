@@ -38,3 +38,32 @@ export const deleteTransaction = async (req, res) => {
     res.status(500).json({ message: "Error deleting transaction" + err });
   }
 };
+
+export const addToGoalWallet = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
+    const transaction = new Transaction({
+      userId: req.user.id,
+      amount,
+      type: "expense",
+      category: "Goal",
+      description: "Added to Goals Wallet",
+      date: new Date().toISOString(),
+      time: new Date().toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      }),
+    });
+    await transaction.save();
+    res.status(201).json({ success: true, transaction });
+  } catch (err) {
+    console.error("Add to wallet error:", err);
+    res
+      .status(500)
+      .json({ message: "Error adding to goals wallet", error: err.message });
+  }
+};
