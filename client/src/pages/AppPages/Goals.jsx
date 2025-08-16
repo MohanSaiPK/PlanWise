@@ -10,6 +10,9 @@ const Goals = () => {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deletingGoalId, setDeletingGoalId] = useState(null);
+
+  const [editingGoalId, setEditingGoalId] = useState(null);
 
   const [newGoal, setNewGoal] = useState({
     name: "",
@@ -54,27 +57,79 @@ const Goals = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/goals", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newGoal),
-      });
 
-      const data = await res.json();
+      let res, data;
+      if (editingGoalId) {
+        res = await fetch(`http://localhost:5000/api/goals/${editingGoalId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newGoal),
+        });
+      } else {
+        res = await fetch("http://localhost:5000/api/goals", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newGoal),
+        });
+      }
+
+      data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error adding goal");
 
       setIsModalOpen(false);
       resetForm();
+      setEditingGoalId(null);
       fetchGoals();
     } catch (err) {
-      console.error("Error adding goal:", err);
+      console.error("Error adding or saving goal:", err);
       alert(err.message);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEditGoal = (goal) => {
+    setNewGoal({
+      name: goal.name,
+      amount: goal.amount,
+      startDate: goal.startDate.split("T")[0],
+      endDate: goal.endDate.split("T")[0],
+      description: goal.description,
+      priority: goal.priority,
+    });
+    setEditingGoalId(goal._id);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteGoal = async (goalId) => {
+    setDeletingGoalId(goalId);
+    setTimeout(async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`http://localhost:5000/api/goals/${goalId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Error deleting goal");
+        setGoals((prev) => prev.filter((goal) => goal._id !== goalId));
+        setDeletingGoalId(null);
+        // fetchGoals();
+      } catch (err) {
+        console.error("Error deleting goal:", err);
+        setDeletingGoalId(null);
+        alert(err.message);
+      }
+    }, 1000);
   };
 
   const resetForm = () => {
@@ -126,10 +181,14 @@ const Goals = () => {
             modules={[EffectCards]}
             className="w-full h-64"
           >
-            {goals.map((goal, index) => (
+            {goals.map((goal) => (
               <SwiperSlide
-                key={index}
-                className="flex justify-center items-center"
+                key={goal._id}
+                className={`flex justify-center items-center ${
+                  deletingGoalId === goal._id
+                    ? "opacity-0 transition-opacity duration-1000"
+                    : ""
+                }`}
               >
                 <div className="border-2 p-4 w-full h-full rounded-lg shadow bg-amber-300">
                   <p className="font-semibold">{goal.name}</p>
@@ -142,10 +201,16 @@ const Goals = () => {
                     {goal.priority}
                   </div>
                   <div className="flex items-center space-x-2 mt-3">
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700">
+                    <button
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
+                      onClick={() => handleEditGoal(goal)}
+                    >
                       <Pencil /> <span>Edit</span>
                     </button>
-                    <button className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-red-700">
+                    <button
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-red-700"
+                      onClick={() => handleDeleteGoal(goal._id)}
+                    >
                       <Trash /> <span>Delete</span>
                     </button>
                   </div>
@@ -163,7 +228,10 @@ const Goals = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-semibold">Add Goal</h2>
               <X
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingGoalId(null);
+                }}
                 className="cursor-pointer"
               />
             </div>
@@ -249,7 +317,11 @@ const Goals = () => {
                   saving && "opacity-50 cursor-not-allowed"
                 }`}
               >
-                {saving ? "Saving..." : "Add Goal"}
+                {saving
+                  ? "Saving..."
+                  : editingGoalId
+                  ? "Update Goal"
+                  : "Add Goal"}
               </button>
             </form>
           </div>

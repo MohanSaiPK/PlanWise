@@ -268,46 +268,42 @@ const Dashboard = () => {
             <div className="w-3/4 border-2  rounded-xl"></div>
             <div className="w-1/4 border-2  rounded-xl">picture</div>
           </div>
-          <div className="flex h-36 space-x-4">
+          <div className="flex h-46 space-x-4">
             <div className="border-2 w-1/3  rounded-xl">Savings Goal</div>
-            <div className="border-2 w-1/3  rounded-xl">
-              <div>Spending Speed:</div>
-              <GaugeComponent
-                style={{
-                  height: "100px",
-                  width: "100%",
-                  padding: "10px",
-                  border: "2px solid black",
-                }}
-                type="radial"
-                arc={{
-                  style: {
-                    width: "50%",
-                    padding: "10px",
-                    border: "2px solid black",
-                  },
-                  colorArray: ["#00FF15", "#FF2121"],
-                  padding: 0.03,
-                  subArcs: [
-                    { limit: 40 },
-                    { limit: 60 },
-                    { limit: 70 },
-                    { limit: 80 },
-                    { limit: 90 },
-                    { limit: 100 },
-                  ],
-                }}
-                labels={{
-                  valueLabel: {
-                    matchColorWithArc: true,
-                  },
-                  tickLabels: {
-                    hideMinMax: true,
-                  },
-                }}
-                pointer={{ type: "needle", animationDelay: 1000 }}
-                value={getSpendingSpeed(payDay, totalIncome, totalExpenses)}
-              />
+            <div className="border-2 w-1/3 rounded-xl flex flex-col  ">
+              <p className="text-center font-medium ">Spending Speed:</p>
+              <div className="flex-1 w-full relative">
+                <GaugeComponent
+                  style={{
+                    position: "absolute",
+                    height: "100%",
+                    width: "100%",
+                  }}
+                  type="radial"
+                  arc={{
+                    colorArray: ["#00FF15", "#FF2121"],
+                    padding: 0.03,
+                    subArcs: [
+                      { limit: 40 },
+                      { limit: 60 },
+                      { limit: 70 },
+                      { limit: 80 },
+                      { limit: 90 },
+                      { limit: 100 },
+                    ],
+                  }}
+                  labels={{
+                    valueLabel: {
+                      matchColorWithArc: true,
+                    },
+                    tickLabels: {
+                      hideMinMax: true,
+                    },
+                  }}
+                  pointer={{ type: "needle", animationDelay: 1000 }}
+                  value={getSpendingSpeed(payDay, totalIncome, totalExpenses)}
+                />
+              </div>
             </div>
             <div className="border-2 w-1/3  rounded-xl">
               <p>Recent Transactions</p>
