@@ -6,7 +6,6 @@ import {
   editGoal,
   deleteGoal,
   allocateToGoal,
-  distributeRemaining,
 } from "../controllers/GoalController.js";
 import { addToGoalWallet } from "../controllers/TransController.js";
 
@@ -18,7 +17,7 @@ router.put("/:editingGoalId", protect, editGoal);
 router.delete("/:goalId", protect, deleteGoal);
 
 router.post("/allocate", protect, allocateToGoal);
-router.post("/distribute", protect, distributeRemaining);
+// router.post("/distribute", protect, distributeRemaining);
 console.log("Goal routes loaded successfully");
 router.post("/wallet", protect, addToGoalWallet);
 

@@ -133,7 +133,7 @@ const Goals = () => {
     e.preventDefault();
     if (!newGoal.name || !newGoal.amount || !newGoal.endDate) {
       alert("Please fill in all required fields");
-      resetForm();
+      // resetForm();
       return;
     }
 
@@ -363,6 +363,7 @@ const Goals = () => {
                 onClick={() => {
                   setIsAddGoalModalOpen(false);
                   setEditingGoalId(null);
+                  resetForm();
                 }}
                 className="cursor-pointer"
               />

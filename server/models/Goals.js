@@ -14,13 +14,27 @@ const GoalSchema = new mongoose.Schema(
     endDate: { type: Date },
     description: { type: String },
     priority: { type: String, enum: ["Low", "Medium", "High"] },
-    status: {
-      type: String,
-      enum: ["In Progress", "Completed"],
-      default: "In Progress",
-    },
+    allocated: { type: Number, default: 0 },
+    status: { type: String, enum: ["Active", "Achieved"], default: "Active" },
+    deleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Goal", GoalSchema);
+const GoalWalletSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    unique: true,
+  },
+  balance: {
+    type: Number,
+    default: 0,
+  },
+});
+
+const Goal = mongoose.model("Goal", GoalSchema);
+const GoalWallet = mongoose.model("GoalWallet", GoalWalletSchema);
+
+export { Goal, GoalWallet };
