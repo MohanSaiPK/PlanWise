@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Plus, X, Pencil, Trash } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCards } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-cards";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 const Goals = () => {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
@@ -12,13 +14,17 @@ const Goals = () => {
   const [saving, setSaving] = useState(false);
   const [deletingGoalId, setDeletingGoalId] = useState(null);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [isAllocateMoneyModalOpen, setIsAllocateMoneyModalOpen] =
+    useState(false);
   const [walletAmount, setWalletAmount] = useState("");
   const [savingWallet, setSavingWallet] = useState(false);
-
+  const swiperRef = useRef(null);
+  const [activeSwiperIndex, setActiveSwiperIndex] = useState(0);
   const [goalWalletBalance, setGoalWalletBalance] = useState(0);
-
   const [editingGoalId, setEditingGoalId] = useState(null);
   const [remainingMoney, setRemainingMoney] = useState(null);
+  const [specificGoalAmount, setSpecificGoalAmount] = useState("");
+  const [selectedGoalId, setSelectedGoalId] = useState(null);
 
   const [newGoal, setNewGoal] = useState({
     name: "",
@@ -39,16 +45,13 @@ const Goals = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch("http://localhost:5000/api/goals/wallet", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data.success) {
-        const balance = data.transactions
-          .filter((tx) => tx.category === "Goal" && tx.type === "expense")
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        setGoalWalletBalance(balance);
-      }
+      if (!res.ok) throw new Error(data.message || "Failed to fetch wallet");
+
+      setGoalWalletBalance(data.balance);
     } catch (e) {
       setGoalWalletBalance(0);
       console.error("Error fetching goal wallet balance:", e);
@@ -98,8 +101,8 @@ const Goals = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error adding to wallet");
 
-      fetchGoalWalletBalance();
-      getRemainingMoney();
+      setGoalWalletBalance(data.wallet.balance);
+      setRemainingMoney((prev) => prev - Number(walletAmount));
       setIsWalletModalOpen(false);
       console.log("Added to Goals Wallet!");
     } catch (err) {
@@ -168,7 +171,7 @@ const Goals = () => {
       setIsAddGoalModalOpen(false);
       resetForm();
       setEditingGoalId(null);
-      fetchGoals();
+      setGoals((prev) => [...prev, data.goal]);
     } catch (err) {
       console.error("Error adding or saving goal:", err);
       alert(err.message);
@@ -206,13 +209,62 @@ const Goals = () => {
         if (!res.ok) throw new Error(data.message || "Error deleting goal");
         setGoals((prev) => prev.filter((goal) => goal._id !== goalId));
         setDeletingGoalId(null);
-        // fetchGoals();
       } catch (err) {
         console.error("Error deleting goal:", err);
         setDeletingGoalId(null);
         alert(err.message);
       }
     }, 1000);
+  };
+
+  const handleAllocateMoney = async (e) => {
+    e.preventDefault();
+    if (
+      !specificGoalAmount ||
+      isNaN(specificGoalAmount) ||
+      specificGoalAmount <= 0
+    ) {
+      alert("Please enter a valid amount");
+      return;
+    }
+    if (specificGoalAmount > goalWalletBalance) {
+      alert("Amount exceeds goal wallet balance");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://localhost:5000/api/goals/${selectedGoalId}/allocate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            amount: Number(specificGoalAmount),
+            goalId: selectedGoalId,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error allocating money");
+      setGoals((prev) =>
+        prev.map((g) =>
+          g._id === selectedGoalId
+            ? { ...g, allocated: data.goal.allocated }
+            : g
+        )
+      );
+      setGoalWalletBalance(data.wallet.balance);
+      setIsAllocateMoneyModalOpen(false);
+      setSpecificGoalAmount("");
+      setSelectedGoalId(null);
+      console.log("Money allocated to goal successfully!");
+    } catch (err) {
+      console.error(err.message);
+      alert(err.message);
+    }
   };
 
   const resetForm = () => {
@@ -268,47 +320,84 @@ const Goals = () => {
           <p>No goals found.</p>
         ) : (
           <Swiper
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+            }}
+            onSlideChange={(swiper) => setActiveSwiperIndex(swiper.activeIndex)}
+            initialSlide={activeSwiperIndex}
             effect="cards"
             grabCursor
             modules={[EffectCards]}
             className="w-full h-64"
           >
-            {goals.map((goal) => (
-              <SwiperSlide
-                key={goal._id}
-                className={`flex justify-center items-center ${
-                  deletingGoalId === goal._id
-                    ? "opacity-0 transition-opacity duration-1000"
-                    : ""
-                }`}
-              >
-                <div className="border-2 p-4 w-full h-full rounded-lg shadow bg-amber-300">
-                  <p className="font-semibold">{goal.name}</p>
-                  <p>₹{goal.amount}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatDate(goal.startDate)} → {formatDate(goal.endDate)}
-                  </p>
-                  <p>{goal.description}</p>
-                  <div className="bg-gray-400 inline-block px-2 py-1 rounded text-white text-xs">
-                    {goal.priority}
+            {Array.isArray(goals) &&
+              goals.map((goal) => (
+                <SwiperSlide
+                  key={goal._id}
+                  className={`flex justify-center items-center ${
+                    deletingGoalId === goal._id
+                      ? "opacity-0 transition-opacity duration-1000"
+                      : ""
+                  }`}
+                >
+                  <div className="border-2 p-4 w-full h-full rounded-lg shadow bg-amber-300 flex">
+                    <div className="w-1/2 flex flex-col justify-center border-2">
+                      <p className="font-semibold">{goal.name}</p>
+                      <p>₹{goal.amount}</p>
+                      <p className="text-sm text-gray-500">
+                        {formatDate(goal.startDate)} →{" "}
+                        {formatDate(goal.endDate)}
+                      </p>
+                      <p>{goal.description}</p>
+                      <div className="bg-gray-400 w-10 inline-block px-2 py-1 rounded text-white text-xs">
+                        {goal.priority}
+                      </div>
+                      <div className="flex items-center space-x-2 mt-3">
+                        <button
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
+                          onClick={() => handleEditGoal(goal)}
+                        >
+                          <Pencil /> <span>Edit</span>
+                        </button>
+                        <button
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-red-700"
+                          onClick={() => handleDeleteGoal(goal._id)}
+                        >
+                          <Trash /> <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-1/2 flex flex-col items-center justify-center">
+                      <div className="w-24 h-24  rounded-full p-1">
+                        <CircularProgressbar
+                          value={(goal.allocated / goal.amount) * 100}
+                          text={`${Math.round(
+                            (goal.allocated / goal.amount) * 100
+                          )}%`}
+                          styles={buildStyles({
+                            pathColor: "#10b981",
+                            textColor: "#111827",
+                            trailColor: "#d1d5db",
+                            strokeLinecap: "round",
+                          })}
+                        />
+                      </div>
+                      <div>Allocated Money: ₹{goal.allocated}</div>
+                      <div>
+                        <button
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
+                          onClick={() => {
+                            setIsAllocateMoneyModalOpen(true);
+                            setSelectedGoalId(goal._id);
+                          }}
+                        >
+                          Allocate money
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2 mt-3">
-                    <button
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
-                      onClick={() => handleEditGoal(goal)}
-                    >
-                      <Pencil /> <span>Edit</span>
-                    </button>
-                    <button
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-red-700"
-                      onClick={() => handleDeleteGoal(goal._id)}
-                    >
-                      <Trash /> <span>Delete</span>
-                    </button>
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
+                </SwiperSlide>
+              ))}
           </Swiper>
         )}
       </div>
@@ -455,6 +544,47 @@ const Goals = () => {
                   : editingGoalId
                   ? "Update Goal"
                   : "Add Goal"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      {isAllocateMoneyModalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Allocate Money to Goal</h2>
+              <X
+                onClick={() => {
+                  setIsAllocateMoneyModalOpen(false);
+                  setSpecificGoalAmount("");
+                }}
+                className="cursor-pointer"
+              />
+            </div>
+            <form className="space-y-4" onSubmit={handleAllocateMoney}>
+              <div>
+                <div className="flex justify-between">
+                  <label className="block text-gray-700">Amount</label>
+                  <div className="text-sm text-gray-500 mb-1">
+                    (Max: ₹{goalWalletBalance})
+                  </div>
+                </div>
+                <input
+                  type="number"
+                  className="w-full p-2 border rounded-md"
+                  value={specificGoalAmount}
+                  min={1}
+                  max={goalWalletBalance}
+                  onChange={(e) => setSpecificGoalAmount(e.target.value)}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
+              >
+                Allocate Money
               </button>
             </form>
           </div>

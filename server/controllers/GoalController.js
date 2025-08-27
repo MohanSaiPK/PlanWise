@@ -1,4 +1,5 @@
 import { GoalWallet, Goal } from "../models/Goals.js";
+import Transaction from "../models/Transaction.js";
 
 export const getGoals = async (req, res) => {
   try {
@@ -100,6 +101,7 @@ export const deleteGoal = async (req, res) => {
   }
 };
 
+//Allocating money to specific goal from wallet
 export const allocateToGoal = async (req, res) => {
   try {
     const { goalId, amount } = req.body;
@@ -136,6 +138,87 @@ export const allocateToGoal = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error allocating funds", error: err.message });
+  }
+};
+
+//remaining to goal wallet
+export const addToGoalWallet = async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    const userId = req.user.id;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
+    let wallet = await GoalWallet.findOne({ userId });
+    if (!wallet) {
+      wallet = new GoalWallet({ userId, balance: 0 });
+      await wallet.save();
+    }
+
+    // Update wallet balance
+    wallet.balance += amount;
+    await wallet.save();
+
+    // Create a new transaction
+    const transaction = new Transaction({
+      userId: req.user.id,
+      amount,
+      type: "expense",
+      category: "Goal",
+      description: "Added to Goals Wallet",
+      date: new Date().toISOString(),
+      time: new Date().toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      }),
+    });
+    await transaction.save();
+    res.status(201).json({
+      success: true,
+      message: "Added to wallet successfully",
+      wallet,
+      transaction,
+    });
+  } catch (err) {
+    console.error("Add to wallet error:", err);
+    res
+      .status(500)
+      .json({ message: "Error adding to goals wallet", error: err.message });
+  }
+};
+//fetching goal wallet
+export const getGoalWallet = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    let wallet = await GoalWallet.findOne({ userId });
+
+    if (!wallet) {
+      wallet = new GoalWallet({ userId, balance: 0 });
+      await wallet.save();
+    }
+
+    res.status(200).json({ success: true, balance: wallet.balance });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+//getting specific goal allocation
+export const getSpecificGoalAlloc = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user.id;
+
+    const goal = await Goal.findOne({ _id: goalId, userId });
+    if (!goal) return res.status(404).json({ message: "Goal not found" });
+
+    res.status(200).json({ allocated: goal.allocated });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching goal allocation", error: err.message });
   }
 };
 

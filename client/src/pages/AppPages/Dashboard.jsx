@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Pie,
   Tooltip,
@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [payDay, setPayDay] = useState(null);
+  const [goals, setGoals] = useState([]);
 
   const fetchBaseIncome = async () => {
     const token = localStorage.getItem("token");
@@ -114,6 +115,38 @@ const Dashboard = () => {
     }
   };
 
+  const fetchGoals = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("http://localhost:5000/api/goals", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch goals");
+      const data = await res.json();
+      setGoals(data);
+    } catch (err) {
+      console.error("Error fetching goals:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nearestGoal = useMemo(() => {
+    if (!goals || goals.length === 0) return null;
+
+    const activeGoals = goals.filter((goal) => goal.status === "Active");
+    if (activeGoals.length === 0) return null;
+
+    return activeGoals.reduce((nearest, current) => {
+      return new Date(current.endDate) < new Date(nearest.endDate)
+        ? current
+        : nearest;
+    });
+  }, [goals]);
+
   function getDaysInPayCycle(payDayDate) {
     // Gets the year and month of the payday, then finds the last day of that month.
     return new Date(
@@ -196,6 +229,7 @@ const Dashboard = () => {
       fetchMonthlyIncomeExpense(),
       fetchRecentTransaction(),
       fetchProfile(),
+      fetchGoals(),
     ]).finally(() => setLoading(false));
   }, []);
 
@@ -269,7 +303,9 @@ const Dashboard = () => {
             <div className="w-1/4 border-2  rounded-xl">picture</div>
           </div>
           <div className="flex h-46 space-x-4">
-            <div className="border-2 w-1/3  rounded-xl">Savings Goal</div>
+            <div className="border-2 w-1/3  rounded-xl">
+              <p>{nearestGoal ? nearestGoal.name : "No Active Goal"}</p>
+            </div>
             <div className="border-2 w-1/3 rounded-xl flex flex-col  ">
               <p className="text-center font-medium ">Spending Speed:</p>
               <div className="flex-1 w-full relative">
@@ -301,7 +337,15 @@ const Dashboard = () => {
                     },
                   }}
                   pointer={{ type: "needle", animationDelay: 1000 }}
-                  value={getSpendingSpeed(payDay, totalIncome, totalExpenses)}
+                  value={
+                    typeof getSpendingSpeed(
+                      payDay,
+                      totalIncome,
+                      totalExpenses
+                    ) === "number"
+                      ? getSpendingSpeed(payDay, totalIncome, totalExpenses)
+                      : 0
+                  }
                 />
               </div>
             </div>
@@ -310,7 +354,10 @@ const Dashboard = () => {
               <ul>
                 {top3Transactions.map((txn) => (
                   <li key={txn._id}>
-                    {txn.description}: {txn.amount}
+                    {txn.description == "Added to Goals Wallet"
+                      ? "+ Goals Wallet"
+                      : txn.description}
+                    : {txn.amount}
                   </li>
                 ))}
               </ul>
