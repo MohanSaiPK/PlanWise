@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Plus, X, Pencil, Trash } from "lucide-react";
+import { GrAchievement } from "react-icons/gr";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCards } from "swiper/modules";
 import "swiper/css";
@@ -40,6 +41,25 @@ const Goals = () => {
     getRemainingMoney();
     fetchGoalWalletBalance();
   }, []);
+
+  const fetchGoals = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/goals", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch goals");
+
+      const data = await res.json();
+      setGoals(data);
+    } catch (err) {
+      console.error("Error fetching goals:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchGoalWalletBalance = async () => {
     const token = localStorage.getItem("token");
@@ -113,25 +133,6 @@ const Goals = () => {
     }
   };
 
-  const fetchGoals = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/goals", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error("Failed to fetch goals");
-
-      const data = await res.json();
-      setGoals(data);
-    } catch (err) {
-      console.error("Error fetching goals:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleAddGoal = async (e) => {
     e.preventDefault();
     if (!newGoal.name || !newGoal.amount || !newGoal.endDate) {
@@ -146,6 +147,7 @@ const Goals = () => {
 
       let res, data;
       if (editingGoalId) {
+        console.log("Editing goal ID:", editingGoalId);
         res = await fetch(`http://localhost:5000/api/goals/${editingGoalId}`, {
           method: "PUT",
           headers: {
@@ -171,7 +173,14 @@ const Goals = () => {
       setIsAddGoalModalOpen(false);
       resetForm();
       setEditingGoalId(null);
-      setGoals((prev) => [...prev, data.goal]);
+      if (editingGoalId) {
+        setGoals((prev) =>
+          prev.map((g) => (g._id === data.goal._id ? data.goal : g))
+        );
+      } else {
+        setGoals((prev) => [...prev, data.goal]);
+      }
+      console.log(data.message);
     } catch (err) {
       console.error("Error adding or saving goal:", err);
       alert(err.message);
@@ -181,6 +190,7 @@ const Goals = () => {
   };
 
   const handleEditGoal = (goal) => {
+    console.log("Editing goal:", goal._id);
     setNewGoal({
       name: goal.name,
       amount: goal.amount,
@@ -208,6 +218,7 @@ const Goals = () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Error deleting goal");
         setGoals((prev) => prev.filter((goal) => goal._id !== goalId));
+        setGoalWalletBalance(data.wallet.balance);
         setDeletingGoalId(null);
       } catch (err) {
         console.error("Error deleting goal:", err);
@@ -263,6 +274,31 @@ const Goals = () => {
       console.log("Money allocated to goal successfully!");
     } catch (err) {
       console.error(err.message);
+      alert(err.message);
+    }
+  };
+
+  const handleAchieveGoal = async (goalId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://localhost:5000/api/goals/${goalId}/achieve`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error achieving goal");
+
+      setGoals((prev) => prev.filter((goal) => goal._id !== goalId));
+      console.log("Goal achieved successfully!");
+    } catch (err) {
+      console.error("Error achieving goal:", err);
       alert(err.message);
     }
   };
@@ -352,6 +388,7 @@ const Goals = () => {
                       <div className="bg-gray-400 w-10 inline-block px-2 py-1 rounded text-white text-xs">
                         {goal.priority}
                       </div>
+                      <div>{goal.status}</div>
                       <div className="flex items-center space-x-2 mt-3">
                         <button
                           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
@@ -383,7 +420,7 @@ const Goals = () => {
                         />
                       </div>
                       <div>Allocated Money: ₹{goal.allocated}</div>
-                      <div>
+                      <div className="flex">
                         <button
                           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
                           onClick={() => {
@@ -392,6 +429,14 @@ const Goals = () => {
                           }}
                         >
                           Allocate money
+                        </button>
+                        <button
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-green-700"
+                          // disabled={goal.allocated < goal.amount}
+                          onClick={() => handleAchieveGoal(goal._id)}
+                        >
+                          <GrAchievement />
+                          <span>Achieve Goal</span>
                         </button>
                       </div>
                     </div>
