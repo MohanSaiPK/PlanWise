@@ -1,0 +1,20 @@
+{
+  "modes": [
+    {
+      "type": "poor",
+      "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1759422674/Gemini_Generated_Image_jlglcyjlglcyjlgl_2_-removebg-preview_devfvy.png"
+    },
+    {
+      "type": "average",
+      "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1759422673/Gemini_Generated_Image_jlglcyjlglcyjlgl_3_-removebg-preview_vuxycg.png"
+    },
+    {
+      "type": "good",
+      "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1759422673/Gemini_Generated_Image_jlglcyjlglcyjlgl_1_-removebg-preview_oudjef.png"
+    },
+    {
+      "type": "excellent",
+      "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1759422672/Gemini_Generated_Image_jlglcyjlglcyjlgl-removebg-preview_u9xrwq.png"
+    }
+  ]
+}

@@ -14,6 +14,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { GaugeComponent } from "react-gauge-component";
+import { modes } from "../../assets/data/images.json";
 
 const Dashboard = () => {
   const [jobIncome, setJobIncome] = useState(null);
@@ -222,6 +223,102 @@ const Dashboard = () => {
     }
   }
 
+  const getMascot = (score) => {
+    if (score >= 80) {
+      return modes.find((mode) => mode.type === "excellent")?.source;
+    } else if (score >= 60) {
+      return modes.find((mode) => mode.type === "good")?.source;
+    } else if (score >= 40) {
+      return modes.find((mode) => mode.type === "average")?.source;
+    } else {
+      return modes.find((mode) => mode.type === "poor")?.source;
+    }
+  };
+
+  // -------- SCORE CALCULATION --------
+  const spendingSpeedScore =
+    totalExpenses > 0
+      ? Number(getSpendingSpeed(payDay, totalIncome, totalExpenses)) || null
+      : null;
+
+  const incomeExpenseRatio =
+    totalIncome && totalIncome > 0
+      ? Number((totalIncome - (totalExpenses || 0)) / totalIncome)
+      : null;
+
+  const goalProgress =
+    nearestGoal && nearestGoal.targetAmount > 0 && nearestGoal.savedAmount > 0
+      ? Math.min(
+          Number((nearestGoal.savedAmount / nearestGoal.targetAmount) * 100),
+          100
+        )
+      : null;
+
+  function calculateScore({
+    goalProgress = null,
+    spendingSpeedScore = null,
+    incomeExpenseRatio = null,
+    stability = 70,
+  }) {
+    const weights = {
+      goal: 0.3,
+      spending: 0.25,
+      ratio: 0.25,
+      stability: 0.2,
+    };
+
+    let totalWeightedScore = 0;
+    let totalWeights = 0;
+
+    if (typeof goalProgress === "number") {
+      totalWeightedScore += goalProgress * weights.goal;
+      totalWeights += weights.goal;
+    }
+
+    if (typeof spendingSpeedScore === "number") {
+      totalWeightedScore += spendingSpeedScore * weights.spending;
+      totalWeights += weights.spending;
+    }
+
+    if (typeof incomeExpenseRatio === "number") {
+      totalWeightedScore += incomeExpenseRatio * 100 * weights.ratio; // 0-100 scale
+      totalWeights += weights.ratio;
+    }
+
+    if (typeof stability === "number") {
+      totalWeightedScore += stability * weights.stability;
+      totalWeights += weights.stability;
+    }
+
+    if (totalWeights === 0) return 0; // fallback if nothing is counted
+    return Math.round(totalWeightedScore / totalWeights);
+  }
+
+  // -------- GRADE --------
+  function getGrade(score) {
+    if (score >= 80)
+      return { grade: "A", color: "text-green-600", label: "Excellent" };
+    if (score >= 60)
+      return { grade: "B", color: "text-yellow-500", label: "Good" };
+    if (score >= 40)
+      return { grade: "C", color: "text-orange-500", label: "Needs Attention" };
+    return { grade: "D", color: "text-red-600", label: "Poor" };
+  }
+
+  // -------- MEMOIZATION --------
+  const score = useMemo(() => {
+    return calculateScore({
+      goalProgress,
+      spendingSpeedScore,
+      incomeExpenseRatio,
+      stability: 70,
+    });
+  }, [goalProgress, spendingSpeedScore, incomeExpenseRatio]);
+
+  const { grade, color, label } = useMemo(() => getGrade(score), [score]);
+
+  // const { img: mascotImg, caption: mascotCaption } = getMascot(score);
+
   useEffect(() => {
     setLoading(true);
     Promise.all([
@@ -295,12 +392,25 @@ const Dashboard = () => {
           </h1>
         </div>
       </div>
+      {/* COL 1 */}
       <div className="w-full flex p-10 space-x-6 h-128 ">
         <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
           <h1>Your Score!</h1>
           <div className="w-full flex h-36 space-x-4">
-            <div className="w-3/4 border-2  rounded-xl"></div>
-            <div className="w-1/4 border-2  rounded-xl">picture</div>
+            <div className=" w-2/3 border-2 rounded-xl p-6 flex flex-col items-center justify-center   shadow-md">
+              <h2 className="text-lg font-semibold">Financial Score</h2>
+              <h1 className={`text-5xl font-bold ${color}`}>{score}</h1>
+              <p className={`text-xl font-medium ${color}`}>{grade}</p>
+              <p className="text-sm text-gray-600">{label}</p>
+            </div>
+
+            <div className="w-1/3 border-2 rounded-xl">
+              <img
+                src={getMascot(score)}
+                alt="Financial mascot"
+                className="w-full h-full object-cover rounded-xl"
+              />
+            </div>
           </div>
           <div className="flex h-46 space-x-4">
             <div className="border-2 w-1/3  rounded-xl">
@@ -364,6 +474,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+        {/* COL 2 */}
         <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
           <h1 className="w-full">Financial Health Overview</h1>
           <div className="flex w-full h-64 space-x-6 ">

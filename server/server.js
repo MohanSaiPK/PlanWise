@@ -7,12 +7,15 @@ import userRoutes from "./routes/UserRoute.js";
 import transactionRoutes from "./routes/TransRoute.js";
 import goalRoutes from "./routes/goalRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
+import { v2 as cloudinary } from "cloudinary";
+import uploadRoutes from "./routes/uploadRoute.js";
 
 dotenv.config();
 
 const app = express();
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
+app.use("/api/uploads", uploadRoutes); // <-- NEW ROUTE MOUNT
 // app.options("*", cors());
 
 // Example GET route with error handling
@@ -46,6 +49,12 @@ app.use((error, req, res, next) => {
     timestamp: new Date().toISOString(),
     ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
   });
+});
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 mongoose

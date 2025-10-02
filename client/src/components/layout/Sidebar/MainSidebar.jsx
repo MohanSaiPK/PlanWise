@@ -18,19 +18,8 @@ const MainSidebar = () => {
       path: "/app/transactions",
     },
     { key: "goals", label: "Goals", icon: "🚪", path: "/app/goals" },
-    {
-      key: "budget-planner",
-      label: "Budget Planner",
-      icon: "📢",
-      path: "/app/budget-planner",
-    },
+
     { key: "reports", label: "Reports", icon: "📊", path: "/app/reports" },
-    {
-      key: "insights",
-      label: "Insights & Predictions",
-      icon: "🔮",
-      path: "/app/insights",
-    },
   ];
 
   const [selected, setSelected] = useState(

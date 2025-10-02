@@ -51,8 +51,6 @@ export const editGoal = async (req, res) => {
     );
 
     if (!goal) return res.status(404).json({ message: "Goal not found" });
-    console.log("Incoming updates:", updates);
-    console.log("Looking for goal:", editingGoalId, "with user:", req.user.id);
 
     res.status(200).json({ goal, message: "Goal updated successfully" });
   } catch (err) {
