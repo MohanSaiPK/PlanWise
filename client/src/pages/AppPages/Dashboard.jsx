@@ -13,8 +13,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { BiSolidDashboard } from "react-icons/bi";
 import { GaugeComponent } from "react-gauge-component";
 import { modes } from "../../assets/data/images.json";
+import IncomeCards from "../../components/cards/IncomeCards";
 
 const Dashboard = () => {
   const [jobIncome, setJobIncome] = useState(null);
@@ -55,6 +57,29 @@ const Dashboard = () => {
       console.error("Error fetching base income:", error);
     }
   };
+
+  const dashboardData = [
+    {
+      id: 1,
+      title: "Total Income",
+      amount: totalIncome,
+      icon: "💰",
+      baseIncome: baseIncome,
+      additionalIncome: additionalIncome,
+    },
+    {
+      id: 2,
+      title: "Total Expenses",
+      amount: totalExpenses,
+      icon: "📅",
+    },
+    {
+      id: 3,
+      title: "Remaining",
+      amount: totalIncome - totalExpenses,
+      icon: "💵",
+    },
+  ];
 
   const fetchMonthlyIncomeExpense = async () => {
     const token = localStorage.getItem("token");
@@ -361,35 +386,13 @@ const Dashboard = () => {
 
   return (
     <div className="text-center flex flex-col justify-center items-center w-full">
-      <div className="flex flex-row items-center justify-between w-full">
-        <h1 className="text-4xl">Dashboard</h1>
-        <div className="border-2 rounded-xl w-64 h-20">
-          <h1>
-            Base Income:{" "}
-            {baseIncome !== null && !loading ? `$ ${baseIncome}` : "-Loading"}
-          </h1>
-          <h1>
-            Additional Income:{" "}
-            {additionalIncome !== null && !loading
-              ? `$ ${additionalIncome}`
-              : "-Loading"}
-          </h1>
-          <h1>
-            Total Income:{" "}
-            {totalIncome !== null && !loading ? `$ ${totalIncome}` : "-Loading"}
-          </h1>
-          <h1>
-            Total Expenses:{" "}
-            {totalExpenses !== null && !loading
-              ? `$ ${totalExpenses}`
-              : "-Loading"}
-          </h1>
-          <h1>
-            Remaining:{" "}
-            {totalIncome !== null && totalExpenses !== null
-              ? `$ ${totalIncome - totalExpenses}`
-              : "-Loading"}
-          </h1>
+      <div className="flex flex-row items-center justify-center gap-4  w-full m-4 p-2">
+        <div className="flex items-center justify-center w-1/10 h-full border-2 rounded-xl p-2">
+          <BiSolidDashboard className="w-full h-full" />
+        </div>
+
+        <div className="flex flex-1 items-start justify-center">
+          <IncomeCards data={dashboardData} loading={loading} />
         </div>
       </div>
       {/* COL 1 */}
