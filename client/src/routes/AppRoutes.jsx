@@ -7,7 +7,6 @@ import Dashboard from "../pages/AppPages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import Transactions from "../pages/AppPages/Transactions";
 import Goals from "../pages/AppPages/Goals";
-
 import Reports from "../pages/AppPages/Reports";
 
 const AppRoutes = () => {

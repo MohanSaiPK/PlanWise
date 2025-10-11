@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { PlusCircle, Search, Filter, X, Trash2 } from "lucide-react";
+import IncomeCards from "../../components/cards/IncomeCards";
+import { useIncome } from "../../hooks/useIncome";
+import { GrTransaction } from "react-icons/gr";
 
 const Transactions = () => {
+  const { incomeData, loading } = useIncome();
+  const { totalIncome, totalExpenses, resetIncomes } = useIncome();
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
 
@@ -31,7 +35,6 @@ const Transactions = () => {
   }, []);
 
   const fetchTransactions = async () => {
-    setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:5000/api/transactions", {
@@ -47,8 +50,6 @@ const Transactions = () => {
     } catch (err) {
       console.error("Fetch error:", err);
       setTransactions([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -75,7 +76,10 @@ const Transactions = () => {
     });
 
     const savedTxn = await res.json();
+
     setTransactions((prev) => [savedTxn, ...prev]);
+
+    await resetIncomes();
 
     setIsExpModalOpen(false);
     setIsIncModalOpen(false);
@@ -153,30 +157,36 @@ const Transactions = () => {
   });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className=" space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold">Transactions</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={openExpenseModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
-          >
-            <PlusCircle size={20} />
-            <span>Add Expense</span>
-          </button>
-          <button
-            onClick={openIncomeModal}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700"
-          >
-            <PlusCircle size={20} />
-            <span>Add Income</span>
-          </button>
+      <div className="flex items-center justify-center gap-4 w-full">
+        <div className="flex flex-row items-center justify-center gap-4  w-full m-4 p-2">
+          <div className="flex items-center justify-center w-1/10 h-full border-2 rounded-xl p-2">
+            <GrTransaction className="w-full h-full" />
+          </div>
+          <div className="flex flex-1 items-start justify-center">
+            <IncomeCards data={incomeData} loading={loading} />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={openExpenseModal}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
+            >
+              <PlusCircle size={20} />
+            </button>
+            <button
+              onClick={openIncomeModal}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700"
+            >
+              <PlusCircle size={20} />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Search & Filter */}
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-4 items-center p-6">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           <input
@@ -212,7 +222,7 @@ const Transactions = () => {
       {loading ? (
         <div className="flex justify-center items-center h-40">Loading...</div>
       ) : (
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="bg-white shadow rounded-lg overflow-hidden p-6">
           <table className="w-full text-left border-collapse">
             <thead className="bg-gray-100">
               <tr>
@@ -281,7 +291,7 @@ const Transactions = () => {
 };
 
 const Modal = ({ title, onClose, onSubmit, children }) => (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-10">
     <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">{title}</h2>

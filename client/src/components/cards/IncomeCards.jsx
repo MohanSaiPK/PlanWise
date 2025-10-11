@@ -5,8 +5,9 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { useIncome } from "../../hooks/useIncome";
 
-const IncomeCards = ({ data, loading }) => {
+const IncomeCards = ({ data = [], loading }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

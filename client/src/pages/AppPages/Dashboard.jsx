@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useState, useEffect, useMemo } from "react";
 import {
   Pie,
@@ -17,19 +17,34 @@ import { BiSolidDashboard } from "react-icons/bi";
 import { GaugeComponent } from "react-gauge-component";
 import { modes } from "../../assets/data/images.json";
 import IncomeCards from "../../components/cards/IncomeCards";
+import { useIncome } from "../../hooks/useIncome";
 
 const Dashboard = () => {
+  const { incomeData, loading, totalIncome, totalExpenses } = useIncome();
   const [jobIncome, setJobIncome] = useState(null);
   const [investmentIncome, setInvestmentIncome] = useState(null);
   const [sideIncome, setSideIncome] = useState(null);
-  const [baseIncome, setBaseIncome] = useState(null);
-  const [totalIncome, setTotalIncome] = useState(null);
-  const [additionalIncome, setAdditionalIncome] = useState(null);
-  const [totalExpenses, setTotalExpenses] = useState(null);
+
   const [recentTransactions, setRecentTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [payDay, setPayDay] = useState(null);
   const [goals, setGoals] = useState([]);
+
+  //-------- DATA FETCHING --------
+  useEffect(() => {
+    const loadDashBoard = async () => {
+      try {
+        Promise.all([
+          fetchBaseIncome(),
+          fetchRecentTransaction(),
+          fetchProfile(),
+          fetchGoals(),
+        ]);
+      } catch (err) {
+        console.error("Error loading dashboard:", err);
+      }
+    };
+    loadDashBoard();
+  }, []);
 
   const fetchBaseIncome = async () => {
     const token = localStorage.getItem("token");
@@ -58,53 +73,6 @@ const Dashboard = () => {
     }
   };
 
-  const dashboardData = [
-    {
-      id: 1,
-      title: "Total Income",
-      amount: totalIncome,
-      icon: "💰",
-      baseIncome: baseIncome,
-      additionalIncome: additionalIncome,
-    },
-    {
-      id: 2,
-      title: "Total Expenses",
-      amount: totalExpenses,
-      icon: "📅",
-    },
-    {
-      id: 3,
-      title: "Remaining",
-      amount: totalIncome - totalExpenses,
-      icon: "💵",
-    },
-  ];
-
-  const fetchMonthlyIncomeExpense = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch("http://localhost:5000/api/income-expense", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (data.success) {
-        setBaseIncome(data.baseIncome);
-        setTotalIncome(data.totalIncome);
-        setAdditionalIncome(data.additionalIncome);
-        setTotalExpenses(data.totalExpenses);
-      } else {
-        console.error(
-          "Error fetching monthly income/expense:",
-          data.message || data.error
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching monthly income/expense:", error);
-    }
-  };
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
 
@@ -136,13 +104,10 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error("Error fetching recent transactions:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchGoals = async () => {
-    setLoading(true);
     const token = localStorage.getItem("token");
     try {
       const res = await fetch("http://localhost:5000/api/goals", {
@@ -155,11 +120,10 @@ const Dashboard = () => {
       setGoals(data);
     } catch (err) {
       console.error("Error fetching goals:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
+  //-------- GOAL LOGIC --------
   const nearestGoal = useMemo(() => {
     if (!goals || goals.length === 0) return null;
 
@@ -262,13 +226,22 @@ const Dashboard = () => {
 
   // -------- SCORE CALCULATION --------
   const spendingSpeedScore =
-    totalExpenses > 0
-      ? Number(getSpendingSpeed(payDay, totalIncome, totalExpenses)) || null
+    incomeData.totalExpenses > 0
+      ? Number(
+          getSpendingSpeed(
+            payDay,
+            incomeData.totalIncome,
+            incomeData.totalExpenses
+          )
+        ) || null
       : null;
 
   const incomeExpenseRatio =
-    totalIncome && totalIncome > 0
-      ? Number((totalIncome - (totalExpenses || 0)) / totalIncome)
+    incomeData.totalIncome && incomeData.totalIncome > 0
+      ? Number(
+          (incomeData.totalIncome - (incomeData.totalExpenses || 0)) /
+            incomeData.totalIncome
+        )
       : null;
 
   const goalProgress =
@@ -342,20 +315,7 @@ const Dashboard = () => {
 
   const { grade, color, label } = useMemo(() => getGrade(score), [score]);
 
-  // const { img: mascotImg, caption: mascotCaption } = getMascot(score);
-
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      fetchBaseIncome(),
-      fetchMonthlyIncomeExpense(),
-      fetchRecentTransaction(),
-      fetchProfile(),
-      fetchGoals(),
-    ]).finally(() => setLoading(false));
-  }, []);
-
-  const incomeData = [
+  const baseIncomeData = [
     {
       name: "Job Income",
       value: jobIncome,
@@ -370,17 +330,20 @@ const Dashboard = () => {
     },
   ];
 
-  const totalData = [
-    {
-      name:
-        new Date().toLocaleDateString("en-US", {
-          month: "short",
-          year: "numeric",
-        }) + " Total",
-      exp: totalExpenses,
-      rem: totalIncome - totalExpenses,
-    },
-  ];
+  const totalData = useMemo(
+    () => [
+      {
+        name:
+          new Date().toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          }) + " Total",
+        exp: totalExpenses ?? 0,
+        rem: (totalIncome ?? 0) - (totalExpenses ?? 0),
+      },
+    ],
+    [totalIncome, totalExpenses]
+  );
 
   const top3Transactions = recentTransactions.slice(0, 3);
 
@@ -390,9 +353,8 @@ const Dashboard = () => {
         <div className="flex items-center justify-center w-1/10 h-full border-2 rounded-xl p-2">
           <BiSolidDashboard className="w-full h-full" />
         </div>
-
         <div className="flex flex-1 items-start justify-center">
-          <IncomeCards data={dashboardData} loading={loading} />
+          <IncomeCards data={incomeData} loading={loading} />
         </div>
       </div>
       {/* COL 1 */}
@@ -453,10 +415,14 @@ const Dashboard = () => {
                   value={
                     typeof getSpendingSpeed(
                       payDay,
-                      totalIncome,
-                      totalExpenses
+                      incomeData.totalIncome,
+                      incomeData.totalExpenses
                     ) === "number"
-                      ? getSpendingSpeed(payDay, totalIncome, totalExpenses)
+                      ? getSpendingSpeed(
+                          payDay,
+                          incomeData.totalIncome,
+                          incomeData.totalExpenses
+                        )
                       : 0
                   }
                 />
@@ -481,35 +447,37 @@ const Dashboard = () => {
         <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
           <h1 className="w-full">Financial Health Overview</h1>
           <div className="flex w-full h-64 space-x-6 ">
-            <div className="w-1/2  border-2">
+            <div className="w-1/2  border-2 h-[300px]">
               <p>Chart1 income vs expense</p>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  width={100}
-                  height={300}
-                  data={totalData}
-                  margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="exp" stackId="a" fill="#8884d8" />
-                  <Bar dataKey="rem" stackId="a" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
+              {!loading && totalData.length > 0 && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    width={100}
+                    height={300}
+                    data={totalData}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="exp" stackId="a" fill="#8884d8" />
+                    <Bar dataKey="rem" stackId="a" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
             <div className="w-1/2  border-2">
               <h1>Income Source Distribution</h1>
               <PieChart width={300} height={300} className="p-6 flex">
                 <Pie
-                  data={incomeData}
+                  data={baseIncomeData}
                   dataKey="value"
                   nameKey="name"
                   cx="40%"
@@ -518,7 +486,7 @@ const Dashboard = () => {
                   fill="#8884d8"
                   label
                 >
-                  {incomeData.map((entry, index) => (
+                  {baseIncomeData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={["#22c55e", "#f59e0b", "#3b82f6"][index % 3]}
