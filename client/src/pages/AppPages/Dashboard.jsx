@@ -1,8 +1,6 @@
-import React, { useContext } from "react";
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Pie,
-  Tooltip,
   Cell,
   PieChart,
   BarChart,
@@ -10,6 +8,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  Tooltip,
   Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -24,16 +23,15 @@ const Dashboard = () => {
   const [jobIncome, setJobIncome] = useState(null);
   const [investmentIncome, setInvestmentIncome] = useState(null);
   const [sideIncome, setSideIncome] = useState(null);
-
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [payDay, setPayDay] = useState(null);
   const [goals, setGoals] = useState([]);
 
-  //-------- DATA FETCHING --------
+  // -------- DATA FETCHING --------
   useEffect(() => {
     const loadDashBoard = async () => {
       try {
-        Promise.all([
+        await Promise.all([
           fetchBaseIncome(),
           fetchRecentTransaction(),
           fetchProfile(),
@@ -49,61 +47,46 @@ const Dashboard = () => {
   const fetchBaseIncome = async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(
+      const res = await fetch(
         "http://localhost:5000/api/user/user-base-income",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      const data = await response.json();
+      const data = await res.json();
       if (data.success) {
         setJobIncome(data.income.jobIncome);
         setInvestmentIncome(data.income.investmentIncome);
         setSideIncome(data.income.sideIncome);
-      } else {
-        console.error(
-          "Error fetching base income:",
-          data.message || data.error
-        );
       }
-    } catch (error) {
-      console.error("Error fetching base income:", error);
+    } catch (err) {
+      console.error("Error fetching base income:", err);
     }
   };
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
-
-    const res = await fetch("http://localhost:5000/api/user/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await res.json();
-    if (data.success) {
-      setPayDay(data.user.payday);
-      console.log("Pay Day:", data.user.payday);
+    try {
+      const res = await fetch("http://localhost:5000/api/user/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setPayDay(data.user.payday);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
     }
   };
 
   const fetchRecentTransaction = async () => {
     const token = localStorage.getItem("token");
-
     try {
       const res = await fetch("http://localhost:5000/api/transactions", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data.success) {
-        // Handle the recent transactions data
-        setRecentTransactions(data.transactions);
-      }
-    } catch (error) {
-      console.error("Error fetching recent transactions:", error);
+      if (data.success) setRecentTransactions(data.transactions);
+    } catch (err) {
+      console.error("Error fetching recent transactions:", err);
     }
   };
 
@@ -111,9 +94,7 @@ const Dashboard = () => {
     const token = localStorage.getItem("token");
     try {
       const res = await fetch("http://localhost:5000/api/goals", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch goals");
       const data = await res.json();
@@ -123,177 +104,113 @@ const Dashboard = () => {
     }
   };
 
-  //-------- GOAL LOGIC --------
+  // -------- GOAL LOGIC --------
+
   const nearestGoal = useMemo(() => {
-    if (!goals || goals.length === 0) return null;
-
-    const activeGoals = goals.filter((goal) => goal.status === "Active");
-    if (activeGoals.length === 0) return null;
-
-    return activeGoals.reduce((nearest, current) => {
-      return new Date(current.endDate) < new Date(nearest.endDate)
-        ? current
-        : nearest;
-    });
+    if (!goals?.length) return null;
+    const activeGoals = goals.filter((g) => g.status === "Active");
+    if (!activeGoals.length) return null;
+    return activeGoals.reduce((nearest, current) =>
+      new Date(current.endDate) < new Date(nearest.endDate) ? current : nearest
+    );
   }, [goals]);
 
-  function getDaysInPayCycle(payDayDate) {
-    // Gets the year and month of the payday, then finds the last day of that month.
-    return new Date(
-      payDayDate.getFullYear(),
-      payDayDate.getMonth() + 1,
-      0
-    ).getDate();
-  }
+  const goalProgress = useMemo(() => {
+    if (!nearestGoal || nearestGoal.targetAmount <= 0) return null;
+    return (nearestGoal.savedAmount / nearestGoal.targetAmount) * 100;
+  }, [nearestGoal]);
 
-  function getDaysSincePayday(payDayDate) {
-    const today = new Date();
-    // Set time to 0 to compare dates only, preventing partial day issues.
-    today.setHours(0, 0, 0, 0);
-    payDayDate.setHours(0, 0, 0, 0);
+  //---------Spending Speed Logic---------
 
-    // Difference in milliseconds converted to days
-    const diffTime = Math.abs(today - payDayDate);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  }
+  //safeNumber utility
+  const safeNumber = (num, fallback = 0) =>
+    Number.isFinite(num) ? num : fallback;
 
-  function getSpendingSpeed(payDayString, totalIncome, totalExpenses) {
-    // Check for invalid or missing inputs
-    if (
-      !payDayString ||
-      !totalIncome ||
-      totalExpenses === null ||
-      totalExpenses < 0
-    ) {
-      return 0;
-    }
+  //Main Logic
+  const spendingSpeedScore = useMemo(() => {
+    const income = safeNumber(totalIncome, 0);
+    const expenses = safeNumber(totalExpenses, 0);
 
-    const payDayDate = new Date(payDayString);
-    if (isNaN(payDayDate.getTime())) return "Invalid Date";
+    if (!payDay || income <= 0) return 0;
 
-    const daysSincePayday = getDaysSincePayday(payDayDate);
+    const daysSincePayday = getDaysSincePayday(payDay);
+    const payDayDate = new Date(payDay);
     const daysInCycle = getDaysInPayCycle(payDayDate);
 
-    // If it's past the cycle, this logic doesn't apply.
-    if (daysSincePayday > daysInCycle) return "Cycle Over";
+    const percentCycleElapsed =
+      (daysSincePayday / Math.max(daysInCycle, 1)) * 100;
+    const percentBudgetSpent = (expenses / income) * 100;
 
-    const daysRemaining = daysInCycle - daysSincePayday;
-    // Calculate percentage of the cycle remaining
-    const percentCycleRemaining = (daysRemaining / daysInCycle) * 100;
+    if (percentBudgetSpent <= 0) return 10;
+    if (percentBudgetSpent >= 100) return 95;
 
-    const budgetRemaining = totalIncome - totalExpenses;
-    // Calculate percentage of the budget remaining
-    const percentBudgetRemaining = (budgetRemaining / totalIncome) * 100;
+    const spendingRatio = percentBudgetSpent / percentCycleElapsed;
 
-    // This is the core metric: the "buffer" between your money and time.
-    const buffer = percentBudgetRemaining - percentCycleRemaining;
-
-    // You can tweak these thresholds for the gauge chart.
-    if (buffer < -15) {
-      return 90; // You have significantly less money % than time % left.
-    } else if (buffer < -10) {
-      return 80; // You have less money % than time % left.
-    } else if (buffer < -5) {
-      return 70; // You have less money % than time % left.
-    } else if (buffer < 0) {
-      return 60; // You're on track, but with little to no buffer.
-    } else if (buffer < 5) {
-      return 50; // You're on track, but with little to no buffer.
-    } else if (buffer < 10) {
-      return 40; // You're on track, but with a small buffer.
-    } else if (buffer < 15) {
-      return 30; // You're on track, but with a moderate buffer.
-    } else if (buffer < 20) {
-      return 20; // You're on track, but with a moderate buffer.
-    } else if (buffer < 25) {
-      return 10; // You're on track, but with a good buffer.
-    } else if (buffer >= 25) {
-      return 0; // You're in a great position!
-    }
-  }
-
-  const getMascot = (score) => {
-    if (score >= 80) {
-      return modes.find((mode) => mode.type === "excellent")?.source;
-    } else if (score >= 60) {
-      return modes.find((mode) => mode.type === "good")?.source;
-    } else if (score >= 40) {
-      return modes.find((mode) => mode.type === "average")?.source;
+    if (spendingRatio <= 1) {
+      return Math.round(10 + spendingRatio * 40);
     } else {
-      return modes.find((mode) => mode.type === "poor")?.source;
+      return Math.round(50 + Math.min((spendingRatio - 1) * 45, 45));
     }
-  };
+
+    function getDaysSincePayday(payDayString) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let pd = new Date(payDayString);
+      if (isNaN(pd.getTime())) {
+        const dom = Number(payDayString);
+        if (!Number.isFinite(dom) || dom < 1 || dom > 31) return 0;
+        pd = new Date(today.getFullYear(), today.getMonth(), dom);
+      }
+      pd.setHours(0, 0, 0, 0);
+      if (pd > today) pd.setMonth(pd.getMonth() - 1);
+
+      return Math.floor((today - pd) / (1000 * 60 * 60 * 24));
+    }
+
+    function getDaysInPayCycle(payDayDate) {
+      return new Date(
+        payDayDate.getFullYear(),
+        payDayDate.getMonth() + 1,
+        0
+      ).getDate();
+    }
+  }, [payDay, totalIncome, totalExpenses]);
+
+  // Income-Expense Ratio
+  const incomeExpenseRatio = useMemo(() => {
+    if (!totalIncome || totalIncome <= 0) return null;
+    return Number.isFinite((totalIncome - (totalExpenses || 0)) / totalIncome)
+      ? (totalIncome - (totalExpenses || 0)) / totalIncome
+      : null;
+  }, [totalIncome, totalExpenses]);
 
   // -------- SCORE CALCULATION --------
-  const spendingSpeedScore =
-    incomeData.totalExpenses > 0
-      ? Number(
-          getSpendingSpeed(
-            payDay,
-            incomeData.totalIncome,
-            incomeData.totalExpenses
-          )
-        ) || null
-      : null;
 
-  const incomeExpenseRatio =
-    incomeData.totalIncome && incomeData.totalIncome > 0
-      ? Number(
-          (incomeData.totalIncome - (incomeData.totalExpenses || 0)) /
-            incomeData.totalIncome
-        )
-      : null;
-
-  const goalProgress =
-    nearestGoal && nearestGoal.targetAmount > 0 && nearestGoal.savedAmount > 0
-      ? Math.min(
-          Number((nearestGoal.savedAmount / nearestGoal.targetAmount) * 100),
-          100
-        )
-      : null;
-
-  function calculateScore({
-    goalProgress = null,
-    spendingSpeedScore = null,
-    incomeExpenseRatio = null,
-    stability = 70,
-  }) {
-    const weights = {
-      goal: 0.3,
-      spending: 0.25,
-      ratio: 0.25,
-      stability: 0.2,
-    };
-
+  const score = useMemo(() => {
+    const weights = { goal: 0.3, spending: 0.25, ratio: 0.25, stability: 0.2 };
     let totalWeightedScore = 0;
     let totalWeights = 0;
 
-    if (typeof goalProgress === "number") {
-      totalWeightedScore += goalProgress * weights.goal;
-      totalWeights += weights.goal;
-    }
+    const gp = safeNumber(goalProgress, 0);
+    totalWeightedScore += gp * weights.goal;
+    totalWeights += weights.goal;
 
-    if (typeof spendingSpeedScore === "number") {
-      totalWeightedScore += spendingSpeedScore * weights.spending;
-      totalWeights += weights.spending;
-    }
+    const ss = safeNumber(spendingSpeedScore, 0);
+    totalWeightedScore += (100 - ss) * weights.spending;
+    totalWeights += weights.spending;
 
-    if (typeof incomeExpenseRatio === "number") {
-      totalWeightedScore += incomeExpenseRatio * 100 * weights.ratio; // 0-100 scale
-      totalWeights += weights.ratio;
-    }
+    const ier = safeNumber(incomeExpenseRatio, 1); // default 100%
+    totalWeightedScore += ier * 100 * weights.ratio;
+    totalWeights += weights.ratio;
 
-    if (typeof stability === "number") {
-      totalWeightedScore += stability * weights.stability;
-      totalWeights += weights.stability;
-    }
+    totalWeightedScore += 70 * weights.stability;
+    totalWeights += weights.stability;
 
-    if (totalWeights === 0) return 0; // fallback if nothing is counted
     return Math.round(totalWeightedScore / totalWeights);
-  }
+  }, [goalProgress, spendingSpeedScore, incomeExpenseRatio]);
 
-  // -------- GRADE --------
-  function getGrade(score) {
+  const { grade, color, label } = useMemo(() => {
     if (score >= 80)
       return { grade: "A", color: "text-green-600", label: "Excellent" };
     if (score >= 60)
@@ -301,35 +218,26 @@ const Dashboard = () => {
     if (score >= 40)
       return { grade: "C", color: "text-orange-500", label: "Needs Attention" };
     return { grade: "D", color: "text-red-600", label: "Poor" };
-  }
+  }, [score]);
 
-  // -------- MEMOIZATION --------
-  const score = useMemo(() => {
-    return calculateScore({
-      goalProgress,
-      spendingSpeedScore,
-      incomeExpenseRatio,
-      stability: 70,
-    });
-  }, [goalProgress, spendingSpeedScore, incomeExpenseRatio]);
+  const getMascot = useCallback((score) => {
+    if (score >= 80) return modes.find((m) => m.type === "excellent")?.source;
+    if (score >= 60) return modes.find((m) => m.type === "good")?.source;
+    if (score >= 40) return modes.find((m) => m.type === "average")?.source;
+    return modes.find((m) => m.type === "poor")?.source;
+  }, []);
 
-  const { grade, color, label } = useMemo(() => getGrade(score), [score]);
+  //------Base Income Data for distribution chart------
+  const baseIncomeData = useMemo(
+    () => [
+      { name: "Job Income", value: jobIncome },
+      { name: "Investment Income", value: investmentIncome },
+      { name: "Side Income", value: sideIncome },
+    ],
+    [jobIncome, investmentIncome, sideIncome]
+  );
 
-  const baseIncomeData = [
-    {
-      name: "Job Income",
-      value: jobIncome,
-    },
-    {
-      name: "Investment Income",
-      value: investmentIncome,
-    },
-    {
-      name: "Side Income",
-      value: sideIncome,
-    },
-  ];
-
+  //------Total Income vs Expense Chart Data------
   const totalData = useMemo(
     () => [
       {
@@ -345,7 +253,10 @@ const Dashboard = () => {
     [totalIncome, totalExpenses]
   );
 
-  const top3Transactions = recentTransactions.slice(0, 3);
+  const top3Transactions = useMemo(
+    () => recentTransactions.slice(0, 3),
+    [recentTransactions]
+  );
 
   return (
     <div className="text-center flex flex-col justify-center items-center w-full">
@@ -395,11 +306,10 @@ const Dashboard = () => {
                     colorArray: ["#00FF15", "#FF2121"],
                     padding: 0.03,
                     subArcs: [
+                      { limit: 20 },
                       { limit: 40 },
                       { limit: 60 },
-                      { limit: 70 },
                       { limit: 80 },
-                      { limit: 90 },
                       { limit: 100 },
                     ],
                   }}
@@ -413,16 +323,8 @@ const Dashboard = () => {
                   }}
                   pointer={{ type: "needle", animationDelay: 1000 }}
                   value={
-                    typeof getSpendingSpeed(
-                      payDay,
-                      incomeData.totalIncome,
-                      incomeData.totalExpenses
-                    ) === "number"
-                      ? getSpendingSpeed(
-                          payDay,
-                          incomeData.totalIncome,
-                          incomeData.totalExpenses
-                        )
+                    typeof spendingSpeedScore === "number"
+                      ? spendingSpeedScore
                       : 0
                   }
                 />

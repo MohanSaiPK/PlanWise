@@ -106,6 +106,8 @@ const Transactions = () => {
       headers: { Authorization: `Bearer ${token}` },
     });
     setTransactions((prev) => prev.filter((txn) => txn._id !== id));
+
+    await resetIncomes();
   };
 
   const openExpenseModal = () => {
