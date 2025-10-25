@@ -349,31 +349,31 @@ const Dashboard = () => {
         <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
           <h1 className="w-full">Financial Health Overview</h1>
           <div className="flex w-full h-64 space-x-6 ">
-            <div className="w-1/2  border-2 h-[300px]">
-              <p>Chart1 income vs expense</p>
-              {!loading && totalData.length > 0 && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    width={100}
-                    height={300}
-                    data={totalData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="exp" stackId="a" fill="#8884d8" />
-                    <Bar dataKey="rem" stackId="a" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
+            <div className="w-1/2 border-2 flex flex-col items-center justify-center">
+              <p className="text-center mb-2">Chart1 income vs expense</p>
+              <div className="flex items-center justify-center w-full h-full">
+                {!loading && totalData.length > 0 && (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={totalData}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 30,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="exp" stackId="a" fill="#8884d8" />
+                      <Bar dataKey="rem" stackId="a" fill="#82ca9d" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
             </div>
             <div className="w-1/2  border-2">
               <h1>Income Source Distribution</h1>
