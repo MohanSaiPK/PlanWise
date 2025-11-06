@@ -67,11 +67,11 @@ const IncomeCards = ({ data = [], loading }) => {
                         Base Income: ${item.baseIncome}
                       </p>
                     )}
-                    {item.additionalIncome && (
+                    {
                       <p className="text-gray-700">
                         Additional Income: ${item.additionalIncome}
                       </p>
-                    )}
+                    }
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

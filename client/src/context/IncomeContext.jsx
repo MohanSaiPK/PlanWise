@@ -15,6 +15,8 @@ export const IncomeProvider = ({ children }) => {
   const [totalIncome, setTotalIncome] = useState(null);
   const [totalExpenses, setTotalExpenses] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchedMonth, setFetchedMonth] = useState(null);
+  const [fetchedYear, setFetchedYear] = useState(null);
 
   const setIncomes = ({ base = null, additional = null, expenses = null }) => {
     setBaseIncome(base);
@@ -37,6 +39,8 @@ export const IncomeProvider = ({ children }) => {
         setTotalIncome(data.totalIncome);
         setAdditionalIncome(data.additionalIncome);
         setTotalExpenses(data.totalExpenses);
+        if (typeof data.month === "number") setFetchedMonth(data.month);
+        if (typeof data.year === "number") setFetchedYear(data.year);
       } else {
         console.error(
           "Error fetching monthly income/expense:",
@@ -51,6 +55,35 @@ export const IncomeProvider = ({ children }) => {
   useEffect(() => {
     resetIncomes().finally(() => setLoading(false));
   }, [resetIncomes]);
+
+  // Auto-refresh when month/year rolls over or when tab regains focus
+  useEffect(() => {
+    const checkMonthRollover = () => {
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      if (
+        fetchedMonth !== null &&
+        fetchedYear !== null &&
+        (currentMonth !== fetchedMonth || currentYear !== fetchedYear)
+      ) {
+        resetIncomes();
+      }
+    };
+
+    const intervalId = setInterval(checkMonthRollover, 60 * 1000); // check every minute
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        checkMonthRollover();
+      }
+    };
+    window.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [fetchedMonth, fetchedYear, resetIncomes]);
 
   const incomeData = useMemo(
     () => [

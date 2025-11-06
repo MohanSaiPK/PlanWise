@@ -120,7 +120,7 @@ const Dashboard = () => {
     return (nearestGoal.savedAmount / nearestGoal.targetAmount) * 100;
   }, [nearestGoal]);
 
-  //---------Spending Speed Logic---------
+  //---------Spending Speed Logic (vs time in pay cycle)---------
 
   //safeNumber utility
   const safeNumber = (num, fallback = 0) =>
@@ -131,7 +131,7 @@ const Dashboard = () => {
     const income = safeNumber(totalIncome, 0);
     const expenses = safeNumber(totalExpenses, 0);
 
-    if (!payDay || income <= 0) return 0;
+    if (!payDay || income <= 0) return 50; // neutral if unknown
 
     const daysSincePayday = getDaysSincePayday(payDay);
     const payDayDate = new Date(payDay);
@@ -139,29 +139,43 @@ const Dashboard = () => {
 
     const percentCycleElapsed =
       (daysSincePayday / Math.max(daysInCycle, 1)) * 100;
-    const percentBudgetSpent = (expenses / income) * 100;
+    const percentBudgetSpent = (expenses / Math.max(income, 1)) * 100;
 
-    if (percentBudgetSpent <= 0) return 10;
-    if (percentBudgetSpent >= 100) return 95;
+    const t = Math.max(0, Math.min(1, percentCycleElapsed / 100));
+    const s = Math.max(0, Math.min(1, percentBudgetSpent / 100));
 
-    const spendingRatio = percentBudgetSpent / percentCycleElapsed;
+    // If no expenses yet, treat pacing safety as max so gauge shows 0
+    if (expenses === 0) return 100;
 
-    if (spendingRatio <= 1) {
-      return Math.round(10 + spendingRatio * 40);
-    } else {
-      return Math.round(50 + Math.min((spendingRatio - 1) * 45, 45));
+    const overshoot = Math.max(0, s - t);
+    const undershoot = Math.max(0, t - s);
+
+    // Normalize: perfect pacing ~70, cap max ~90
+    let score = 70 - Math.min(70, (overshoot / 0.3) * 70);
+    score += Math.min(20, (undershoot / 0.3) * 20);
+
+    // End-of-cycle adjustments
+    if (t >= 0.95) {
+      if (s >= 0.6 && s <= 0.75) score += 5; // sweet spot
+      if (s < 0.5) score -= 10; // underutilized budget may indicate misreporting
     }
 
-    function getDaysSincePayday(payDayString) {
+    return Math.round(Math.max(0, Math.min(100, score)));
+
+    function getDaysSincePayday(payDayInput) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      let pd = new Date(payDayString);
-      if (isNaN(pd.getTime())) {
-        const dom = Number(payDayString);
-        if (!Number.isFinite(dom) || dom < 1 || dom > 31) return 0;
-        pd = new Date(today.getFullYear(), today.getMonth(), dom);
+      // Always derive using numeric day-of-month only
+      let dayOfMonth = Number(payDayInput);
+      if (!Number.isFinite(dayOfMonth)) {
+        const d = new Date(payDayInput);
+        dayOfMonth = Number.isFinite(d.getTime()) ? d.getDate() : NaN;
       }
+      if (!Number.isFinite(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31)
+        return 0;
+
+      let pd = new Date(today.getFullYear(), today.getMonth(), dayOfMonth);
       pd.setHours(0, 0, 0, 0);
       if (pd > today) pd.setMonth(pd.getMonth() - 1);
 
@@ -177,38 +191,43 @@ const Dashboard = () => {
     }
   }, [payDay, totalIncome, totalExpenses]);
 
-  // Income-Expense Ratio
-  const incomeExpenseRatio = useMemo(() => {
-    if (!totalIncome || totalIncome <= 0) return null;
-    return Number.isFinite((totalIncome - (totalExpenses || 0)) / totalIncome)
-      ? (totalIncome - (totalExpenses || 0)) / totalIncome
-      : null;
+  // Income-Expense Ratio (score form 0-100)
+  const incomeExpenseScore = useMemo(() => {
+    const income = safeNumber(totalIncome, 0);
+    const expenses = safeNumber(totalExpenses, 0);
+    if (income <= 0) return 50; // neutral
+    const s = Math.max(0, Math.min(1, expenses / income));
+    return Math.round((1 - s) * 100);
   }, [totalIncome, totalExpenses]);
 
   // -------- SCORE CALCULATION --------
 
   const score = useMemo(() => {
-    const weights = { goal: 0.3, spending: 0.25, ratio: 0.25, stability: 0.2 };
-    let totalWeightedScore = 0;
-    let totalWeights = 0;
+    const weights = { goal: 0.6, spending: 0.05, ratio: 0.35 };
+    let total = 0;
+    let denom = 0;
 
-    const gp = safeNumber(goalProgress, 0);
-    totalWeightedScore += gp * weights.goal;
-    totalWeights += weights.goal;
+    if (Number.isFinite(goalProgress)) {
+      const gp = Math.max(0, Math.min(100, goalProgress));
+      total += gp * weights.goal;
+      denom += weights.goal;
+    }
 
-    const ss = safeNumber(spendingSpeedScore, 0);
-    totalWeightedScore += (100 - ss) * weights.spending;
-    totalWeights += weights.spending;
+    if (Number.isFinite(spendingSpeedScore)) {
+      const ss = Math.max(0, Math.min(100, spendingSpeedScore));
+      total += ss * weights.spending;
+      denom += weights.spending;
+    }
 
-    const ier = safeNumber(incomeExpenseRatio, 1); // default 100%
-    totalWeightedScore += ier * 100 * weights.ratio;
-    totalWeights += weights.ratio;
+    if (Number.isFinite(incomeExpenseScore)) {
+      const ier = Math.max(0, Math.min(100, incomeExpenseScore));
+      total += ier * weights.ratio;
+      denom += weights.ratio;
+    }
 
-    totalWeightedScore += 70 * weights.stability;
-    totalWeights += weights.stability;
-
-    return Math.round(totalWeightedScore / totalWeights);
-  }, [goalProgress, spendingSpeedScore, incomeExpenseRatio]);
+    if (denom === 0) return 0;
+    return Math.round(total / denom);
+  }, [goalProgress, spendingSpeedScore, incomeExpenseScore]);
 
   const { grade, color, label } = useMemo(() => {
     if (score >= 80)
@@ -269,7 +288,7 @@ const Dashboard = () => {
         </div>
       </div>
       {/* COL 1 */}
-      <div className="w-full flex p-10 space-x-6 h-128 ">
+      <div className="w-full flex px  -10 space-x-6  ">
         <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
           <h1>Your Score!</h1>
           <div className="w-full flex h-36 space-x-4">
@@ -324,7 +343,7 @@ const Dashboard = () => {
                   pointer={{ type: "needle", animationDelay: 1000 }}
                   value={
                     typeof spendingSpeedScore === "number"
-                      ? spendingSpeedScore
+                      ? Math.max(0, Math.min(100, 100 - spendingSpeedScore))
                       : 0
                   }
                 />
