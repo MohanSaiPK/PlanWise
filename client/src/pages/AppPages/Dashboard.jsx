@@ -12,9 +12,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { BiSolidDashboard } from "react-icons/bi";
+import { LayoutDashboard } from "lucide-react";
 import { GaugeComponent } from "react-gauge-component";
 import { modes } from "../../assets/data/images.json";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 import IncomeCards from "../../components/cards/IncomeCards";
 import { useIncome } from "../../hooks/useIncome";
 
@@ -116,8 +118,14 @@ const Dashboard = () => {
   }, [goals]);
 
   const goalProgress = useMemo(() => {
-    if (!nearestGoal || nearestGoal.targetAmount <= 0) return null;
-    return (nearestGoal.savedAmount / nearestGoal.targetAmount) * 100;
+    if (!nearestGoal) return null;
+    // Prefer allocated/amount (as used in Goals), fallback to savedAmount/targetAmount
+    const allocated = Number(
+      nearestGoal.allocated ?? nearestGoal.savedAmount ?? 0
+    );
+    const target = Number(nearestGoal.amount ?? nearestGoal.targetAmount ?? 0);
+    if (!Number.isFinite(target) || target <= 0) return null;
+    return (allocated / target) * 100;
   }, [nearestGoal]);
 
   //---------Spending Speed Logic (vs time in pay cycle)---------
@@ -280,18 +288,18 @@ const Dashboard = () => {
   return (
     <div className="text-center flex flex-col justify-center items-center w-full">
       <div className="flex flex-row items-center justify-center gap-4  w-full m-4 p-2">
-        <div className="flex items-center justify-center w-1/10 h-full border-2 rounded-xl p-2">
-          <BiSolidDashboard className="w-full h-full" />
+        <div className="flex items-center justify-center w-14 h-14 rounded-xl p-2 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow">
+          <LayoutDashboard className="w-8 h-8" />
         </div>
         <div className="flex flex-1 items-start justify-center">
           <IncomeCards data={incomeData} loading={loading} />
         </div>
       </div>
       {/* COL 1 */}
-      <div className="w-full flex px  -10 space-x-6  ">
+      <div className="w-full flex px-10 space-x-6  ">
         <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
           <h1>Your Score!</h1>
-          <div className="w-full flex h-36 space-x-4">
+          <div className="w-full flex space-x-4">
             <div className=" w-2/3 border-2 rounded-xl p-6 flex flex-col items-center justify-center   shadow-md">
               <h2 className="text-lg font-semibold">Financial Score</h2>
               <h1 className={`text-5xl font-bold ${color}`}>{score}</h1>
@@ -308,12 +316,69 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex h-46 space-x-4">
-            <div className="border-2 w-1/3  rounded-xl">
-              <p>{nearestGoal ? nearestGoal.name : "No Active Goal"}</p>
+            <div className="border-2 w-1/3 rounded-xl p-4">
+              {nearestGoal ? (
+                <div className="flex flex-col gap-2 h-full">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-base md:text-lg text-gray-900 line-clamp-1">
+                      {nearestGoal.name}
+                    </h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+                      {nearestGoal.priority || ""}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-gray-500 mb-1">
+                    {new Date(nearestGoal.startDate).toLocaleDateString()} →{" "}
+                    {new Date(nearestGoal.endDate).toLocaleDateString()}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 justify-between w-full text-sm flex-wrap md:flex-nowrap">
+                    <div>
+                      <div className="flex flex-col items-center flex-1 min-w-[70px]">
+                        <span className="text-xs text-gray-500">Target</span>
+                        <span className="font-semibold text-gray-700">
+                          ₹{nearestGoal.amount ?? nearestGoal.targetAmount}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center flex-1 min-w-[70px]">
+                        <span className="text-xs text-gray-500">Allocated</span>
+                        <span className="font-semibold text-gray-700">
+                          ₹
+                          {nearestGoal.allocated ??
+                            nearestGoal.savedAmount ??
+                            0}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center flex-1 min-w-[48px]">
+                      <div className="w-12 h-12">
+                        <CircularProgressbar
+                          value={Math.max(
+                            0,
+                            Math.min(100, Math.round(goalProgress ?? 0))
+                          )}
+                          text={`${Math.max(
+                            0,
+                            Math.min(100, Math.round(goalProgress ?? 0))
+                          )}%`}
+                          styles={buildStyles({
+                            pathColor: "#22c55e",
+                            textColor: "#065f46",
+                            trailColor: "#e5e7eb",
+                            strokeLinecap: "round",
+                            textSize: "15px",
+                          })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 p-2">No Active Goal</p>
+              )}
             </div>
-            <div className="border-2 w-1/3 rounded-xl flex flex-col  ">
+            <div className="border-2 w-1/3 rounded-xl flex flex-col">
               <p className="text-center font-medium ">Spending Speed:</p>
-              <div className="flex-1 w-full relative">
+              <div className="w-full relative aspect-square max-h-64 mx-auto">
                 <GaugeComponent
                   style={{
                     position: "absolute",
@@ -335,6 +400,11 @@ const Dashboard = () => {
                   labels={{
                     valueLabel: {
                       matchColorWithArc: true,
+                      style: {
+                        fontSize: 48,
+                        fontWeight: "bold",
+                        textShadow: "none",
+                      },
                     },
                     tickLabels: {
                       hideMinMax: true,
@@ -367,55 +437,65 @@ const Dashboard = () => {
         {/* COL 2 */}
         <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
           <h1 className="w-full">Financial Health Overview</h1>
-          <div className="flex w-full h-64 space-x-6 ">
-            <div className="w-1/2 border-2 flex flex-col items-center justify-center">
-              <p className="text-center mb-2">Chart1 income vs expense</p>
-              <div className="flex items-center justify-center w-full h-full">
+          <div className="flex w-full flex-col lg:flex-row lg:h-80 space-x-0 lg:space-x-6 space-y-6 lg:space-y-0">
+            <div className="w-full lg:w-1/2 border-2 rounded-xl p-3 flex flex-col">
+              <p className="text-center mb-2">Income vs Expense</p>
+              <div className="flex-1">
                 {!loading && totalData.length > 0 && (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={totalData}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 30,
-                        bottom: 5,
-                      }}
+                      margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="exp" stackId="a" fill="#8884d8" />
-                      <Bar dataKey="rem" stackId="a" fill="#82ca9d" />
+                      <Bar
+                        dataKey="exp"
+                        stackId="a"
+                        fill="#ef4444"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="rem"
+                        stackId="a"
+                        fill="#22c55e"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </div>
-            <div className="w-1/2  border-2">
-              <h1>Income Source Distribution</h1>
-              <PieChart width={300} height={300} className="p-6 flex">
-                <Pie
-                  data={baseIncomeData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="40%"
-                  cy="40%"
-                  outerRadius={90}
-                  fill="#8884d8"
-                  label
-                >
-                  {baseIncomeData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={["#22c55e", "#f59e0b", "#3b82f6"][index % 3]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
+            <div className="w-full lg:w-1/2 border-2 rounded-xl p-3">
+              <h1 className="text-center">Income Source Distribution</h1>
+              <div className="w-full h-64 lg:h-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={baseIncomeData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="45%"
+                      outerRadius="75%"
+                      label
+                    >
+                      {baseIncomeData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={["#22c55e", "#f59e0b", "#3b82f6"][index % 3]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
           <div className="w-full border-2 h-16">

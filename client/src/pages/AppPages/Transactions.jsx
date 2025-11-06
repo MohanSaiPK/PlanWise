@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { PlusCircle, Search, Filter, X, Trash2 } from "lucide-react";
+import {
+  PlusCircle,
+  Search,
+  Filter,
+  X,
+  Trash2,
+  ReceiptText,
+} from "lucide-react";
 import IncomeCards from "../../components/cards/IncomeCards";
 import { useIncome } from "../../hooks/useIncome";
-import { GrTransaction } from "react-icons/gr";
+// replaced page icon with lucide ReceiptText for consistency
 
 const Transactions = () => {
   const { incomeData, loading } = useIncome();
-  const { totalIncome, totalExpenses, resetIncomes } = useIncome();
+  const { resetIncomes } = useIncome();
   const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
@@ -163,8 +170,8 @@ const Transactions = () => {
       {/* Header */}
       <div className="flex items-center justify-center gap-4 w-full">
         <div className="flex flex-row items-center justify-center gap-4  w-full m-4 p-2">
-          <div className="flex items-center justify-center w-1/10 h-full border-2 rounded-xl p-2">
-            <GrTransaction className="w-full h-full" />
+          <div className="flex items-center justify-center w-14 h-14 rounded-xl p-2 bg-gradient-to-br from-rose-500 via-orange-500 to-yellow-500 text-white shadow">
+            <ReceiptText className="w-8 h-8" />
           </div>
           <div className="flex flex-1 items-start justify-center">
             <IncomeCards data={incomeData} loading={loading} />
@@ -188,82 +195,170 @@ const Transactions = () => {
       </div>
 
       {/* Search & Filter */}
-      <div className="flex gap-4 items-center p-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border pl-10 pr-4 py-2 rounded-lg"
-          />
-        </div>
-        <div className="relative">
-          <Filter className="absolute left-3 top-2.5 text-gray-400" size={18} />
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="border pl-10 pr-4 py-2 rounded-lg"
-          >
-            <option value="All">All</option>
-            <option value="Food">Food</option>
-            <option value="Transport">Transport</option>
-            <option value="Entertainment">Entertainment</option>
-            <option value="Bills">Bills</option>
-            <option value="Bonus">Bonus</option>
-            <option value="Business">Business</option>
-            <option value="Investments">Investments</option>
-            <option value="Other">Other</option>
-            <option value="Goal">Goal</option>
-          </select>
+      <div className="px-4">
+        <div className="bg-white rounded-xl shadow-sm border p-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
+            {/* Search */}
+            <div className="md:col-span-3">
+              <div className="relative">
+                <Search
+                  className="absolute left-3 top-2.5 text-gray-400"
+                  size={18}
+                />
+                <input
+                  type="text"
+                  placeholder="Search by description or category"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border pl-10 pr-10 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                />
+                {search && (
+                  <button
+                    className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setSearch("")}
+                    aria-label="Clear search"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Category */}
+            <div className="md:col-span-2">
+              <div className="relative">
+                <Filter
+                  className="absolute left-3 top-2.5 text-gray-400"
+                  size={18}
+                />
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="w-full border pl-10 pr-4 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                >
+                  <option value="All">All categories</option>
+                  <option value="Food">Food</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Bills">Bills</option>
+                  <option value="Bonus">Bonus</option>
+                  <option value="Business">Business</option>
+                  <option value="Investments">Investments</option>
+                  <option value="Other">Other</option>
+                  <option value="Goal">Goal</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Responsive Lists */}
       {loading ? (
         <div className="flex justify-center items-center h-40">Loading...</div>
       ) : (
-        <div className="bg-white shadow rounded-lg overflow-hidden p-6">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3">Date</th>
-                <th className="p-3">Type</th>
-                <th className="p-3">Category</th>
-                <th className="p-3">Description</th>
-                <th className="p-3">Amount</th>
-                <th className="p-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((txn) => (
-                  <tr key={txn._id} className="border-b hover:bg-gray-50">
-                    <td className="p-3">
-                      {new Date(txn.date).toLocaleDateString()}
-                    </td>
-                    <td className="p-3 capitalize">{txn.type}</td>
-                    <td className="p-3">{txn.category}</td>
-                    <td className="p-3">{txn.description}</td>
-                    <td className="p-3 font-semibold">₹{txn.amount}</td>
-                    <td
-                      className="p-3 cursor-pointer"
-                      onClick={() => handleDeleteTransaction(txn._id)}
-                    >
-                      <Trash2 size={18} />
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="p-3 text-center text-gray-500">
-                    No transactions this month.
-                  </td>
-                </tr>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Expenses Column */}
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="px-4 py-3 border-b flex items-center justify-between">
+              <h3 className="font-semibold">Expenses</h3>
+              <span className="text-sm text-red-600 font-medium">
+                -₹
+                {filteredTransactions
+                  .filter((t) => t.type === "expense")
+                  .reduce((s, t) => s + (t.amount || 0), 0)}
+              </span>
+            </div>
+            <div className="max-h-[60vh] overflow-auto divide-y">
+              {filteredTransactions.filter((t) => t.type === "expense")
+                .length === 0 && (
+                <div className="p-4 text-sm text-gray-500">No expenses</div>
               )}
-            </tbody>
-          </table>
+              {filteredTransactions
+                .filter((t) => t.type === "expense")
+                .map((t) => (
+                  <div
+                    key={t._id}
+                    className="p-4 flex items-center justify-between"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-10 rounded-full bg-red-500" />
+                      <div className="flex flex-col">
+                        <div className="font-medium text-sm">
+                          {t.description || t.category}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(t.date).toLocaleDateString()} • {t.category}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="font-semibold text-red-600">
+                        -₹{t.amount}
+                      </div>
+                      <button
+                        className="p-2 rounded hover:bg-gray-100"
+                        onClick={() => handleDeleteTransaction(t._id)}
+                        aria-label="Delete expense"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* Income Column */}
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="px-4 py-3 border-b flex items-center justify-between">
+              <h3 className="font-semibold">Income</h3>
+              <span className="text-sm text-green-600 font-medium">
+                +₹
+                {filteredTransactions
+                  .filter((t) => t.type === "income")
+                  .reduce((s, t) => s + (t.amount || 0), 0)}
+              </span>
+            </div>
+            <div className="max-h-[60vh] overflow-auto divide-y">
+              {filteredTransactions.filter((t) => t.type === "income")
+                .length === 0 && (
+                <div className="p-4 text-sm text-gray-500">No income</div>
+              )}
+              {filteredTransactions
+                .filter((t) => t.type === "income")
+                .map((t) => (
+                  <div
+                    key={t._id}
+                    className="p-4 flex items-center justify-between"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-10 rounded-full bg-green-500" />
+                      <div className="flex flex-col">
+                        <div className="font-medium text-sm">
+                          {t.description || t.category}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(t.date).toLocaleDateString()} • {t.category}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="font-semibold text-green-600">
+                        +₹{t.amount}
+                      </div>
+                      <button
+                        className="p-2 rounded hover:bg-gray-100"
+                        onClick={() => handleDeleteTransaction(t._id)}
+                        aria-label="Delete income"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
         </div>
       )}
 

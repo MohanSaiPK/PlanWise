@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Plus, X, Pencil, Trash } from "lucide-react";
+import { Plus, X, Pencil, Trash, Target } from "lucide-react";
 import { GrAchievement } from "react-icons/gr";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCards } from "swiper/modules";
@@ -330,7 +330,12 @@ const Goals = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-4xl">Goals</h1>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center shadow">
+            <Target className="w-7 h-7" />
+          </div>
+          <h1 className="text-4xl">Goals</h1>
+        </div>
         <button
           onClick={() => setIsAddGoalModalOpen(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
@@ -376,68 +381,102 @@ const Goals = () => {
                       : ""
                   }`}
                 >
-                  <div className="border-2 p-4 w-full h-full rounded-lg shadow bg-amber-300 flex">
-                    <div className="w-1/2 flex flex-col justify-center border-2">
-                      <p className="font-semibold">{goal.name}</p>
-                      <p>₹{goal.amount}</p>
-                      <p className="text-sm text-gray-500">
-                        {formatDate(goal.startDate)} →{" "}
-                        {formatDate(goal.endDate)}
-                      </p>
-                      <p>{goal.description}</p>
-                      <div className="bg-gray-400 w-10 inline-block px-2 py-1 rounded text-white text-xs">
-                        {goal.priority}
+                  <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.15),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.12),transparent_40%)]" />
+                    <div className="relative z-10 p-5 h-full grid grid-cols-2 gap-4">
+                      <div className="flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full bg-white/25 text-white uppercase tracking-wide">
+                              {goal.priority}
+                            </span>
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                                goal.status === "Active"
+                                  ? "bg-emerald-400/30 text-white"
+                                  : "bg-white/25 text-white"
+                              }`}
+                            >
+                              {goal.status}
+                            </span>
+                          </div>
+                          <h3 className="text-white text-xl font-bold leading-snug line-clamp-2">
+                            {goal.name}
+                          </h3>
+                          <p className="text-white/80 text-xs mt-1 line-clamp-2">
+                            {goal.description}
+                          </p>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-white">
+                          <div className="bg-white/10 rounded-lg p-2">
+                            <div className="text-[10px] opacity-80">Target</div>
+                            <div className="font-semibold">₹{goal.amount}</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-2">
+                            <div className="text-[10px] opacity-80">
+                              Allocated
+                            </div>
+                            <div className="font-semibold">
+                              ₹{goal.allocated}
+                            </div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-2 col-span-2">
+                            <div className="text-[10px] opacity-80">
+                              Timeline
+                            </div>
+                            <div className="text-xs">
+                              {formatDate(goal.startDate)} →{" "}
+                              {formatDate(goal.endDate)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-3">
+                          <button
+                            className="px-3 py-2 rounded-lg text-white/90 bg-white/20 hover:bg-white/30 transition flex items-center gap-1"
+                            onClick={() => handleEditGoal(goal)}
+                          >
+                            <Pencil size={16} /> Edit
+                          </button>
+                          <button
+                            className="px-3 py-2 rounded-lg text-white/90 bg-white/20 hover:bg-white/30 transition flex items-center gap-1"
+                            onClick={() => handleDeleteGoal(goal._id)}
+                          >
+                            <Trash size={16} /> Delete
+                          </button>
+                        </div>
                       </div>
-                      <div>{goal.status}</div>
-                      <div className="flex items-center space-x-2 mt-3">
-                        <button
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
-                          onClick={() => handleEditGoal(goal)}
-                        >
-                          <Pencil /> <span>Edit</span>
-                        </button>
-                        <button
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-red-700"
-                          onClick={() => handleDeleteGoal(goal._id)}
-                        >
-                          <Trash /> <span>Delete</span>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="w-1/2 flex flex-col items-center justify-center">
-                      <div className="w-24 h-24  rounded-full p-1">
-                        <CircularProgressbar
-                          value={(goal.allocated / goal.amount) * 100}
-                          text={`${Math.round(
-                            (goal.allocated / goal.amount) * 100
-                          )}%`}
-                          styles={buildStyles({
-                            pathColor: "#10b981",
-                            textColor: "#111827",
-                            trailColor: "#d1d5db",
-                            strokeLinecap: "round",
-                          })}
-                        />
-                      </div>
-                      <div>Allocated Money: ₹{goal.allocated}</div>
-                      <div className="flex">
-                        <button
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
-                          onClick={() => {
-                            setIsAllocateMoneyModalOpen(true);
-                            setSelectedGoalId(goal._id);
-                          }}
-                        >
-                          Allocate money
-                        </button>
-                        <button
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-green-700"
-                          // disabled={goal.allocated < goal.amount}
-                          onClick={() => handleAchieveGoal(goal._id)}
-                        >
-                          <GrAchievement />
-                          <span>Achieve Goal</span>
-                        </button>
+                      <div className="flex flex-col items-center justify-between">
+                        <div className="w-28 h-28">
+                          <CircularProgressbar
+                            value={(goal.allocated / goal.amount) * 100}
+                            text={`${Math.round(
+                              (goal.allocated / goal.amount) * 100
+                            )}%`}
+                            styles={buildStyles({
+                              pathColor: "#22c55e",
+                              textColor: "#ffffff",
+                              trailColor: "rgba(255,255,255,0.25)",
+                              strokeLinecap: "round",
+                            })}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 mt-3">
+                          <button
+                            className="px-3 py-2 rounded-lg bg-emerald-400 text-emerald-900 font-semibold hover:brightness-95 transition"
+                            onClick={() => {
+                              setIsAllocateMoneyModalOpen(true);
+                              setSelectedGoalId(goal._id);
+                            }}
+                          >
+                            Allocate
+                          </button>
+                          <button
+                            className="px-3 py-2 rounded-lg bg-white text-indigo-700 font-semibold hover:bg-gray-50 transition flex items-center gap-1"
+                            onClick={() => handleAchieveGoal(goal._id)}
+                          >
+                            <GrAchievement /> Achieve
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

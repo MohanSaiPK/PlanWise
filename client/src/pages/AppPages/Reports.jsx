@@ -9,6 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { BarChart3 } from "lucide-react";
 import {
   computeFinancialScore,
   computeIncomeExpenseScore,
@@ -176,7 +177,14 @@ const Reports = () => {
   return (
     <div className="w-full px-4 md:px-8 lg:px-12 py-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl md:text-3xl font-semibold">Monthly Reports</h1>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 via-cyan-500 to-emerald-500 text-white flex items-center justify-center shadow">
+            <BarChart3 className="w-7 h-7" />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-semibold">
+            Monthly Reports
+          </h1>
+        </div>
         <button
           onClick={fetchAll}
           className="px-3 py-1.5 text-sm rounded-md border shadow-sm hover:bg-gray-50 active:bg-gray-100"
