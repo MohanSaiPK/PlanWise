@@ -1,9 +1,15 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import * as Slider from "@radix-ui/react-slider";
 import { useAuth } from "../../hooks/useAuth";
-import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { useEffect } from "react";
+import {
+  Briefcase,
+  TrendingUp,
+  DollarSign,
+  Calendar,
+  Globe,
+  User,
+} from "lucide-react";
+import imagesData from "../../assets/data/images.json";
 
 const FirstLogin = () => {
   const { setUser } = useAuth();
@@ -22,25 +28,46 @@ const FirstLogin = () => {
     avatar: "",
   });
 
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
+  const nextStep = () => {
+    if (step === 1) {
+      // Skip step 2 (budget allocation), go directly to step 3
+      setStep(3);
+    } else {
+      setStep(step + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (step === 3) {
+      // Go back to step 1 (skip step 2)
+      setStep(1);
+    } else {
+      setStep(step - 1);
+    }
+  };
 
   const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // console.log(formData.jobIncome, value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Extract day of month from payday if it's a date string
+    let paydayValue = formData.payday;
+    if (paydayValue && paydayValue.includes("-")) {
+      const date = new Date(paydayValue);
+      paydayValue = date.getDate().toString();
+    }
+
     const payload = {
       jobIncome: Number(formData.jobIncome || 0),
       investmentIncome: Number(formData.investmentIncome || 0),
       sideIncome: Number(formData.sideIncome || 0),
-      needsRatio: Number(formData.needsRatio || 0),
-      wantsRatio: Number(formData.wantsRatio || 0),
-      savingsRatio: Number(formData.savingsRatio || 0),
-      payday: formData.payday,
+      needsRatio: Number(formData.needsRatio || 4),
+      wantsRatio: Number(formData.wantsRatio || 3),
+      savingsRatio: Number(formData.savingsRatio || 3),
+      payday: paydayValue,
       currency: formData.currency,
       avatar: formData.avatar,
     };
@@ -66,31 +93,77 @@ const FirstLogin = () => {
     }
   };
 
+  const totalSteps = 2; // Only 2 steps now (step 1 and step 3, skipping step 2)
+
   return (
-    <div className="flex flex-col items-center justify-center space-y-20">
-      <h1 className="text-5xl">Let's Set Up Your Plan, Wiser!</h1>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex flex-col items-center justify-center p-4 md:p-8">
+      <div className="w-full max-w-4xl space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Let's Set Up Your Plan, Wiser!
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Step {step === 1 ? 1 : 2} of {totalSteps}
+          </p>
+        </div>
 
-      {step === 1 && (
-        <Step1Income formData={formData} handleChange={handleChange} />
-      )}
-      {step === 2 && (
-        <Step2Budget formData={formData} handleChange={handleChange} />
-      )}
-      {step === 3 && (
-        <Step3Profile formData={formData} handleChange={handleChange} />
-      )}
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div
+            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full transition-all duration-500 ease-out"
+            style={{ width: `${(step / totalSteps) * 100}%` }}
+          ></div>
+        </div>
 
-      <div className="flex items-center justify-center space-x-128">
-        {step > 1 && <button onClick={prevStep}> Back</button>}
-        {step < 3 && <button onClick={nextStep}> Next</button>}
-        {step === 3 && <button onClick={handleSubmit}> Finish</button>}
+        {/* Step Content */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-10">
+          {step === 1 && (
+            <Step1Income formData={formData} handleChange={handleChange} />
+          )}
+          {/* Step 2 (Budget Allocation) is commented out - kept for future use */}
+          {step === 3 && (
+            <Step3Profile formData={formData} handleChange={handleChange} />
+          )}
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-between gap-4">
+          <button
+            onClick={prevStep}
+            disabled={step === 1}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+              step === 1
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-md transform hover:scale-105"
+            }`}
+          >
+            ← Back
+          </button>
+
+          {step < 3 ? (
+            <button
+              onClick={nextStep}
+              className="px-8 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
+              Next →
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
+              Finish ✓
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
 const Step1Income = ({ formData, handleChange }) => {
-  const [userData, setUserData] = useState("");
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -103,7 +176,6 @@ const Step1Income = ({ formData, handleChange }) => {
       .then((data) => {
         if (data.success) {
           setUserData(data.user);
-          console.log("User profile fetched:", data.user);
         }
       })
       .catch((error) => {
@@ -111,44 +183,113 @@ const Step1Income = ({ formData, handleChange }) => {
       });
   }, []);
 
+  const incomeCards = [
+    {
+      id: "jobIncome",
+      label: "Job Income",
+      placeholder: "Enter your salary",
+      icon: Briefcase,
+      color: "from-blue-500 to-cyan-500",
+      value: formData.jobIncome,
+    },
+    {
+      id: "investmentIncome",
+      label: "Investment Income",
+      placeholder: "Enter returns",
+      icon: TrendingUp,
+      color: "from-green-500 to-emerald-500",
+      value: formData.investmentIncome,
+    },
+    {
+      id: "sideIncome",
+      label: "Side Income",
+      placeholder: "Enter side income",
+      icon: DollarSign,
+      color: "from-purple-500 to-pink-500",
+      value: formData.sideIncome,
+    },
+  ];
+
   return (
-    <div className="flex flex-col space-y-6 border-2 p-16 rounded-2xl">
-      <h2 className="text-3xl">Your Monthly Income Sources</h2>
-      <p className="text-lg">User: {userData.name}</p>
-      <div className="flex space-x-6 items-center justify-around w-128">
-        <label className="text-xl">Job Income</label>
-        <input
-          type="number"
-          placeholder="Enter Salary"
-          value={formData.jobIncome}
-          onChange={(e) => handleChange("jobIncome", e.target.value)}
-          className="p-4"
-        />
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
+          Your Monthly Income Sources
+        </h2>
+        {userData && (
+          <p className="text-lg text-gray-600">
+            Welcome,{" "}
+            <span className="font-semibold text-indigo-600">
+              {userData.name}
+            </span>
+            ! 👋
+          </p>
+        )}
+        <p className="text-gray-500">
+          Tell us about your income streams to get started
+        </p>
       </div>
-      <div className="flex space-x-6 items-center justify-around w-128">
-        <label className="text-xl">Investment Income</label>
-        <input
-          type="number"
-          placeholder="Enter Returns"
-          value={formData.investmentIncome}
-          onChange={(e) => handleChange("investmentIncome", e.target.value)}
-          className="p-4"
-        />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {incomeCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={card.id}
+              className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200 hover:border-indigo-300 transition-all duration-200 hover:shadow-lg"
+            >
+              <div className="flex flex-col items-center space-y-4">
+                <div
+                  className={`w-16 h-16 rounded-full bg-gradient-to-br ${card.color} flex items-center justify-center shadow-lg`}
+                >
+                  <Icon className="w-8 h-8 text-white" />
+                </div>
+                <label className="text-lg font-semibold text-gray-700 text-center">
+                  {card.label}
+                </label>
+                <div className="w-full">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
+                      ₹
+                    </span>
+                    <input
+                      type="number"
+                      placeholder={card.placeholder}
+                      value={card.value}
+                      onChange={(e) => handleChange(card.id, e.target.value)}
+                      className="w-full pl-8 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none text-lg"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <div className="flex space-x-6 items-center justify-around w-128">
-        <label className="text-xl ">Side Income</label>
-        <input
-          type="number"
-          placeholder="Enter Side Income"
-          value={formData.sideIncome}
-          onChange={(e) => handleChange("sideIncome", e.target.value)}
-          className="p-4"
-        />
-      </div>
+
+      {/* Total Income Display */}
+      {formData.jobIncome ||
+      formData.investmentIncome ||
+      formData.sideIncome ? (
+        <div className="mt-6 p-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl text-white text-center">
+          <p className="text-sm opacity-90">Total Monthly Income</p>
+          <p className="text-3xl font-bold">
+            ₹
+            {(
+              Number(formData.jobIncome || 0) +
+              Number(formData.investmentIncome || 0) +
+              Number(formData.sideIncome || 0)
+            ).toLocaleString("en-IN")}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 };
 
+// Step2Budget is commented out but kept for future use
+/*
 const Step2Budget = ({ formData, handleChange }) => {
   const TOTAL_RATIO = 10;
 
@@ -236,7 +377,6 @@ const Step2Budget = ({ formData, handleChange }) => {
         Monthly Income: <strong>₹{monthlyIncome}</strong>
       </p>
 
-      {/* Needs */}
       <div className="w-full">
         <label className="block text-xl mb-2">Needs ({ratios.needs})</label>
         <Slider.Root
@@ -255,7 +395,6 @@ const Step2Budget = ({ formData, handleChange }) => {
         <p>₹{needsAmount}</p>
       </div>
 
-      {/* Wants */}
       <div className="w-full">
         <label className="block text-xl mb-2">Wants ({ratios.wants})</label>
         <Slider.Root
@@ -274,7 +413,6 @@ const Step2Budget = ({ formData, handleChange }) => {
         <p>₹{wantsAmount}</p>
       </div>
 
-      {/* Savings */}
       <div className="w-full">
         <label className="block text-xl mb-2">Savings ({ratios.savings})</label>
         <Slider.Root
@@ -293,7 +431,6 @@ const Step2Budget = ({ formData, handleChange }) => {
         <p>₹{savingsAmount}</p>
       </div>
 
-      {/* Chart */}
       <PieChart width={300} height={250}>
         <Pie
           data={data}
@@ -314,31 +451,125 @@ const Step2Budget = ({ formData, handleChange }) => {
     </div>
   );
 };
+*/
 
 const Step3Profile = ({ formData, handleChange }) => {
+  // Get owl mascot from images.json
+  const owlMascot = imagesData.profile.find((p) => p.type === "owl");
+
+  useEffect(() => {
+    // Set owl as default avatar if not already set
+    if (!formData.avatar && owlMascot) {
+      handleChange("avatar", owlMascot.source);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handlePaydayChange = (e) => {
+    const dateValue = e.target.value;
+    if (dateValue) {
+      const date = new Date(dateValue);
+      const dayOfMonth = date.getDate();
+      handleChange("payday", dayOfMonth.toString());
+    } else {
+      handleChange("payday", "");
+    }
+  };
+
+  // Convert day of month back to a date for the input (use current month)
+  const getDateFromDay = (day) => {
+    if (!day) return "";
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    return `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+  };
+
   return (
-    <div className="flex flex-col justify-between items-center space-y-6 border-2 p-16 rounded-2xl">
-      <h2 className="text-3xl">Profile</h2>
-      <div className="flex space-x-6 items-center justify-around w-128">
-        <label className="text-xl">Payday</label>
-        <input
-          type="date"
-          value={formData.payday}
-          onChange={(e) => handleChange("payday", e.target.value)}
-          className="p-4"
-        />
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
+          Complete Your Profile
+        </h2>
+        <p className="text-gray-500">
+          A few more details to personalize your experience
+        </p>
       </div>
-      <div className="flex space-x-6 items-center justify-around  w-128">
-        <label className="text-xl">Currency</label>
-        <select
-          value={formData.currency}
-          onChange={(e) => handleChange("currency", e.target.value)}
-          className="p-4"
-        >
-          <option value="USD">USD</option>
-          <option value="INR">INR</option>
-          <option value="GBP">GBP</option>
-        </select>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Mascot Selection */}
+        <div className="space-y-4">
+          <label className="flex items-center gap-2 text-lg font-semibold text-gray-700">
+            <User className="w-5 h-5" />
+            Choose Your Mascot
+          </label>
+          {owlMascot && (
+            <div className="border-2 border-indigo-300 rounded-xl p-6 bg-gradient-to-br from-indigo-50 to-purple-50 hover:shadow-lg transition-all">
+              <div className="flex flex-col items-center space-y-4">
+                <img
+                  src={owlMascot.source}
+                  alt="Owl Mascot"
+                  className="w-32 h-32 object-contain"
+                />
+                <p className="font-semibold text-gray-700">Owl</p>
+                <button
+                  type="button"
+                  onClick={() => handleChange("avatar", owlMascot.source)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    formData.avatar === owlMascot.source
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  {formData.avatar === owlMascot.source
+                    ? "Selected ✓"
+                    : "Select"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Profile Details */}
+        <div className="space-y-6">
+          {/* Payday */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-lg font-semibold text-gray-700">
+              <Calendar className="w-5 h-5" />
+              Payday (Day of Month)
+            </label>
+            <input
+              type="date"
+              value={getDateFromDay(formData.payday)}
+              onChange={handlePaydayChange}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
+            />
+            {formData.payday && (
+              <p className="text-sm text-gray-500">
+                Selected: Day {formData.payday} of each month
+              </p>
+            )}
+          </div>
+
+          {/* Currency */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-lg font-semibold text-gray-700">
+              <Globe className="w-5 h-5" />
+              Currency
+            </label>
+            <select
+              value={formData.currency}
+              onChange={(e) => handleChange("currency", e.target.value)}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   );

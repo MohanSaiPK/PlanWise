@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Plus, X, Pencil, Trash, Target } from "lucide-react";
+import { Plus, X, Pencil, Trash, Target, DollarSign } from "lucide-react";
 import { GrAchievement } from "react-icons/gr";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCards } from "swiper/modules";
@@ -11,7 +11,9 @@ import "react-circular-progressbar/dist/styles.css";
 const Goals = () => {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [goals, setGoals] = useState([]);
+  const [achievedGoals, setAchievedGoals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingAchieved, setLoadingAchieved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingGoalId, setDeletingGoalId] = useState(null);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
@@ -38,6 +40,7 @@ const Goals = () => {
 
   useEffect(() => {
     fetchGoals();
+    fetchAchievedGoals();
     getRemainingMoney();
     fetchGoalWalletBalance();
   }, []);
@@ -58,6 +61,25 @@ const Goals = () => {
       console.error("Error fetching goals:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAchievedGoals = async () => {
+    setLoadingAchieved(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/goals/achieved", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch achieved goals");
+
+      const data = await res.json();
+      setAchievedGoals(data);
+    } catch (err) {
+      console.error("Error fetching achieved goals:", err);
+    } finally {
+      setLoadingAchieved(false);
     }
   };
 
@@ -296,6 +318,7 @@ const Goals = () => {
       if (!res.ok) throw new Error(data.message || "Error achieving goal");
 
       setGoals((prev) => prev.filter((goal) => goal._id !== goalId));
+      fetchAchievedGoals(); // Refresh achieved goals list
       console.log("Goal achieved successfully!");
     } catch (err) {
       console.error("Error achieving goal:", err);
@@ -329,28 +352,77 @@ const Goals = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center shadow">
-            <Target className="w-7 h-7" />
+      <div className="space-y-6">
+        {/* Title and Add Goal Button */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center shadow-lg">
+              <Target className="w-7 h-7" />
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Goals
+            </h1>
           </div>
-          <h1 className="text-4xl">Goals</h1>
+          <button
+            onClick={() => setIsAddGoalModalOpen(true)}
+            className="px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-lg font-semibold flex items-center gap-2 hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            <Plus size={20} />
+            <span>Add Goal</span>
+          </button>
         </div>
-        <button
-          onClick={() => setIsAddGoalModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
-        >
-          <Plus /> <span>Add Goal</span>
-        </button>
-        <p>Remaining: ₹{remainingMoney}</p>
-        <p>Wallet Balance: ₹{goalWalletBalance}</p>
-        <button
-          onClick={() => setIsWalletModalOpen(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700"
-        >
-          <Plus />
-          <span>Add to goal wallet</span>
-        </button>
+
+        {/* Balance Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Remaining Money Card */}
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Remaining Balance
+                </p>
+                <p className="text-3xl font-bold text-gray-800">
+                  ₹{remainingMoney !== null ? remainingMoney.toLocaleString("en-IN") : "0"}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Available for allocation
+                </p>
+              </div>
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                <DollarSign className="w-8 h-8 text-white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Wallet Balance Card */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow relative">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Goal Wallet Balance
+                </p>
+                <p className="text-3xl font-bold text-gray-800">
+                  ₹{goalWalletBalance.toLocaleString("en-IN")}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Ready to allocate to goals
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                  <Target className="w-8 h-8 text-white" />
+                </div>
+                <button
+                  onClick={() => setIsWalletModalOpen(true)}
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-110 transition-all duration-200 hover:from-green-600 hover:to-emerald-700"
+                  aria-label="Add to Goal Wallet"
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Goals Display */}
@@ -369,7 +441,7 @@ const Goals = () => {
             effect="cards"
             grabCursor
             modules={[EffectCards]}
-            className="w-full h-64"
+            className="w-full h-full"
           >
             {Array.isArray(goals) &&
               goals.map((goal) => (
@@ -381,9 +453,9 @@ const Goals = () => {
                       : ""
                   }`}
                 >
-                  <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+                  <div className="relative w-full h-full rounded-2xl border-pink-500 border-2  shadow-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 ">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.15),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.12),transparent_40%)]" />
-                    <div className="relative z-10 p-5 h-full grid grid-cols-2 gap-4">
+                    <div className="relative z-10 p-5 h-full  grid grid-cols-2 gap-4">
                       <div className="flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
@@ -432,13 +504,13 @@ const Goals = () => {
                         </div>
                         <div className="flex items-center gap-2 mt-3">
                           <button
-                            className="px-3 py-2 rounded-lg text-white/90 bg-white/20 hover:bg-white/30 transition flex items-center gap-1"
+                            className="px-4 py-2 rounded-lg text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all duration-200 flex items-center gap-2 font-medium shadow-md hover:shadow-lg transform hover:scale-105"
                             onClick={() => handleEditGoal(goal)}
                           >
                             <Pencil size={16} /> Edit
                           </button>
                           <button
-                            className="px-3 py-2 rounded-lg text-white/90 bg-white/20 hover:bg-white/30 transition flex items-center gap-1"
+                            className="px-4 py-2 rounded-lg text-white bg-red-500/80 hover:bg-red-600/90 backdrop-blur-sm transition-all duration-200 flex items-center gap-2 font-medium shadow-md hover:shadow-lg transform hover:scale-105"
                             onClick={() => handleDeleteGoal(goal._id)}
                           >
                             <Trash size={16} /> Delete
@@ -462,7 +534,7 @@ const Goals = () => {
                         </div>
                         <div className="flex items-center gap-2 mt-3">
                           <button
-                            className="px-3 py-2 rounded-lg bg-emerald-400 text-emerald-900 font-semibold hover:brightness-95 transition"
+                            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-500 text-white font-semibold hover:from-emerald-500 hover:to-emerald-600 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                             onClick={() => {
                               setIsAllocateMoneyModalOpen(true);
                               setSelectedGoalId(goal._id);
@@ -471,10 +543,10 @@ const Goals = () => {
                             Allocate
                           </button>
                           <button
-                            className="px-3 py-2 rounded-lg bg-white text-indigo-700 font-semibold hover:bg-gray-50 transition flex items-center gap-1"
+                            className="px-5 py-2.5 rounded-lg bg-white/90 text-indigo-700 font-semibold hover:bg-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 transform hover:scale-105"
                             onClick={() => handleAchieveGoal(goal._id)}
                           >
-                            <GrAchievement /> Achieve
+                            <GrAchievement size={18} /> Achieve
                           </button>
                         </div>
                       </div>
@@ -483,6 +555,69 @@ const Goals = () => {
                 </SwiperSlide>
               ))}
           </Swiper>
+        )}
+      </div>
+
+      {/* Achieved Goals Section */}
+      <div className="mt-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 text-white flex items-center justify-center shadow">
+            <GrAchievement className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-bold">Achieved Goals</h2>
+        </div>
+        {loadingAchieved ? (
+          <p className="text-gray-500">Loading achieved goals...</p>
+        ) : achievedGoals.length === 0 ? (
+          <p className="text-gray-500">
+            No achieved goals yet. Keep working towards your goals!
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {achievedGoals.map((goal) => (
+              <div
+                key={goal._id}
+                className="relative rounded-2xl border-2 border-yellow-400 shadow-lg bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 p-5"
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.15),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.12),transparent_40%)]" />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-white/30 text-white uppercase tracking-wide">
+                      Achieved
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-white/30 text-white">
+                      {goal.priority}
+                    </span>
+                  </div>
+                  <h3 className="text-white text-xl font-bold mb-2 line-clamp-2">
+                    {goal.name}
+                  </h3>
+                  <p className="text-white/90 text-sm mb-4 line-clamp-2">
+                    {goal.description}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="bg-white/20 rounded-lg p-2">
+                      <div className="text-[10px] text-white/80">Target</div>
+                      <div className="font-semibold text-white">
+                        ₹{goal.amount}
+                      </div>
+                    </div>
+                    <div className="bg-white/20 rounded-lg p-2">
+                      <div className="text-[10px] text-white/80">Allocated</div>
+                      <div className="font-semibold text-white">
+                        ₹{goal.allocated}
+                      </div>
+                    </div>
+                  </div>
+                  {goal.achievedAt && (
+                    <div className="text-white/90 text-xs">
+                      Achieved on: {formatDate(goal.achievedAt)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -517,7 +652,10 @@ const Goals = () => {
 
               <button
                 type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 w-full"
+                disabled={savingWallet}
+                className={`w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 ${
+                  savingWallet ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 {savingWallet ? "Saving..." : "Add to Wallet"}
               </button>
@@ -619,8 +757,8 @@ const Goals = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className={`bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 ${
-                  saving && "opacity-50 cursor-not-allowed"
+                className={`w-full px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 ${
+                  saving ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
                 {saving
@@ -666,7 +804,7 @@ const Goals = () => {
 
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
+                className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
               >
                 Allocate Money
               </button>

@@ -21,7 +21,8 @@ import IncomeCards from "../../components/cards/IncomeCards";
 import { useIncome } from "../../hooks/useIncome";
 
 const Dashboard = () => {
-  const { incomeData, loading, totalIncome, totalExpenses } = useIncome();
+  const { incomeData, loading, totalIncome, totalExpenses, resetIncomes } =
+    useIncome();
   const [jobIncome, setJobIncome] = useState(null);
   const [investmentIncome, setInvestmentIncome] = useState(null);
   const [sideIncome, setSideIncome] = useState(null);
@@ -33,6 +34,8 @@ const Dashboard = () => {
   useEffect(() => {
     const loadDashBoard = async () => {
       try {
+        // Refresh income data to ensure spending speed uses latest total income
+        await resetIncomes();
         await Promise.all([
           fetchBaseIncome(),
           fetchRecentTransaction(),
@@ -44,7 +47,49 @@ const Dashboard = () => {
       }
     };
     loadDashBoard();
-  }, []);
+  }, [resetIncomes]);
+
+  // Refresh income data when page becomes visible (to catch updates from other tabs/pages)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        resetIncomes();
+      }
+    };
+    window.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [resetIncomes]);
+
+  // Refresh data when transaction is added from FAB
+  useEffect(() => {
+    const handleTransactionAdded = () => {
+      resetIncomes();
+      fetchRecentTransaction();
+    };
+
+    window.addEventListener("transactionAdded", handleTransactionAdded);
+
+    return () => {
+      window.removeEventListener("transactionAdded", handleTransactionAdded);
+    };
+  }, [resetIncomes]);
+
+  // Refresh data when settings are updated
+  useEffect(() => {
+    const handleSettingsUpdated = () => {
+      resetIncomes();
+      fetchBaseIncome();
+      fetchProfile();
+    };
+
+    window.addEventListener("settingsUpdated", handleSettingsUpdated);
+
+    return () => {
+      window.removeEventListener("settingsUpdated", handleSettingsUpdated);
+    };
+  }, [resetIncomes]);
 
   const fetchBaseIncome = async () => {
     const token = localStorage.getItem("token");
@@ -419,18 +464,53 @@ const Dashboard = () => {
                 />
               </div>
             </div>
-            <div className="border-2 w-1/3  rounded-xl">
-              <p>Recent Transactions</p>
-              <ul>
-                {top3Transactions.map((txn) => (
-                  <li key={txn._id}>
-                    {txn.description == "Added to Goals Wallet"
-                      ? "+ Goals Wallet"
-                      : txn.description}
-                    : {txn.amount}
-                  </li>
-                ))}
-              </ul>
+            <div className="border-2 w-1/3 rounded-xl p-3 flex flex-col">
+              <h3 className="font-semibold text-xs mb-1 text-gray-700">
+                Recent Transactions
+              </h3>
+              <div className="flex flex-col space-y-1  min-h-0">
+                {top3Transactions.length === 0 ? (
+                  <p className="text-[10px] text-gray-500 text-center py-2">
+                    No recent transactions
+                  </p>
+                ) : (
+                  top3Transactions.map((txn) => (
+                    <div
+                      key={txn._id}
+                      className={`p-1 rounded border ${
+                        txn.type === "income"
+                          ? "bg-green-50 border-green-200"
+                          : "bg-red-100 border-red-200"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col items-start justify-center min-w-0">
+                          <div className="text-[11px] flex space-x-1font-medium text-gray-900 truncate">
+                            <p>em</p>
+                            <p className="">
+                              {txn.description === "Added to Goals Wallet"
+                                ? "+ Goals Wallet"
+                                : txn.description}
+                            </p>
+                          </div>
+                          <p className="text-[9px] text-gray-500">
+                            {new Date(txn.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span
+                          className={`font-semibold text-xs whitespace-nowrap ${
+                            txn.type === "income"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {txn.type === "income" ? "+" : "-"}₹{txn.amount}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -471,7 +551,7 @@ const Dashboard = () => {
             </div>
             <div className="w-full lg:w-1/2 border-2 rounded-xl p-3">
               <h1 className="text-center">Income Source Distribution</h1>
-              <div className="w-full h-64 lg:h-full">
+              <div className="w-full h-64 lg:h-full p-3">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie

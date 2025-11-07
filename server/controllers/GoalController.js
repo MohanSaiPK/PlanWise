@@ -268,6 +268,7 @@ export const getAchievedGoals = async (req, res) => {
     const achievedGoals = await Goal.find({
       userId: req.user.id,
       status: "Achieved",
+      deleted: false,
     }).sort({ updatedAt: -1 });
 
     res.status(200).json(achievedGoals);

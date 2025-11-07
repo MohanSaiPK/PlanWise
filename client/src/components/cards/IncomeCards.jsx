@@ -5,10 +5,11 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { ChevronDown } from "lucide-react";
 // import { useIncome } from "../../hooks/useIncome";
 
 const IncomeCards = ({ data = [], loading }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [accordionValue, setAccordionValue] = useState("");
   const formatAmount = (val) =>
     new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(
       Number(val || 0)
@@ -30,20 +31,26 @@ const IncomeCards = ({ data = [], loading }) => {
           {data.map((item) => (
             <div
               key={item.id}
-              className="relative bg-white p-3 rounded-xl shadow-sm border flex overflow-visible"
+              className={`bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300 ${
+                item.id === 1 ? "sm:col-span-2 lg:col-span-1 relative" : ""
+              }`}
             >
               {/* Header (icon + title + amount) */}
               {item.id !== 1 && (
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="text-3xl">{item.icon}</div>
-                    <h2 className="text-base md:text-lg font-semibold">
-                      {item.title}
-                    </h2>
+                <div className="p-4 md:p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="text-2xl md:text-3xl flex-shrink-0">
+                        {item.icon}
+                      </div>
+                      <h2 className="text-sm md:text-base lg:text-lg font-semibold text-gray-800 truncate">
+                        {item.title}
+                      </h2>
+                    </div>
+                    <p className="text-gray-800 font-bold text-base md:text-lg lg:text-xl whitespace-nowrap">
+                      ₹{formatAmount(item.amount)}
+                    </p>
                   </div>
-                  <p className="text-gray-800 font-semibold text-lg">
-                    ₹{formatAmount(item.amount)}
-                  </p>
                 </div>
               )}
 
@@ -52,34 +59,54 @@ const IncomeCards = ({ data = [], loading }) => {
                 <Accordion
                   type="single"
                   collapsible
-                  value={isOpen ? "item-1" : ""}
-                  className="w-full z-50"
+                  value={accordionValue}
+                  onValueChange={setAccordionValue}
+                  className="w-full relative"
                 >
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger
-                      onClick={() => setIsOpen(!isOpen)}
-                      className="justify-between items-center w-full"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-3xl">{item.icon}</div>
-                        <h2 className="text-base md:text-lg font-semibold">
-                          {item.title}
-                        </h2>
+                  <AccordionItem value="item-1" className="border-0">
+                    <AccordionTrigger className="p-4 md:p-5 hover:no-underline data-[state=open]:bg-gradient-to-r data-[state=open]:from-indigo-50 data-[state=open]:to-purple-50 transition-all duration-300 [&>svg]:hidden">
+                      <div className="flex items-center justify-between w-full gap-3 pr-2">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="text-2xl md:text-3xl flex-shrink-0">
+                            {item.icon}
+                          </div>
+                          <h2 className="text-sm md:text-base lg:text-lg font-semibold text-gray-800 truncate">
+                            {item.title}
+                          </h2>
+                        </div>
+                        <div className="flex items-center gap-2 md:gap-3">
+                          <p className="text-gray-800 font-bold text-base md:text-lg lg:text-xl whitespace-nowrap">
+                            ₹{formatAmount(item.amount)}
+                          </p>
+                          <ChevronDown
+                            className={`h-4 w-4 md:h-5 md:w-5 text-gray-500 transition-transform duration-300 flex-shrink-0 ${
+                              accordionValue === "item-1" ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
                       </div>
-                      <p className="text-gray-800 font-semibold text-lg">
-                        ₹{formatAmount(item.amount)}
-                      </p>
                     </AccordionTrigger>
-                    <AccordionContent className="absolute left-0 right-0 top-full bg-white shadow-lg border rounded-md mt-2 p-3 z-50">
-                      {item.baseIncome != null && (
-                        <p className="text-gray-700 mb-1">
-                          Base Income: ₹{formatAmount(item.baseIncome)}
-                        </p>
-                      )}
-                      <p className="text-gray-700">
-                        Additional Income: ₹
-                        {formatAmount(item.additionalIncome)}
-                      </p>
+                    <AccordionContent className="absolute left-0 right-0 top-full z-50 pt-2">
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-3 md:p-4 space-y-2 md:space-y-3 border border-gray-200 shadow-xl mx-4 md:mx-5">
+                        {item.baseIncome != null && (
+                          <div className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
+                            <span className="text-xs md:text-sm font-medium text-gray-600">
+                              Base Income
+                            </span>
+                            <span className="text-sm md:text-base font-bold text-gray-800">
+                              ₹{formatAmount(item.baseIncome)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between py-2">
+                          <span className="text-xs md:text-sm font-medium text-gray-600">
+                            Additional Income
+                          </span>
+                          <span className="text-sm md:text-base font-bold text-indigo-600">
+                            ₹{formatAmount(item.additionalIncome)}
+                          </span>
+                        </div>
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

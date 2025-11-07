@@ -9,6 +9,10 @@ import {
 } from "lucide-react";
 import IncomeCards from "../../components/cards/IncomeCards";
 import { useIncome } from "../../hooks/useIncome";
+import {
+  TransactionModal,
+  TransactionModalForm,
+} from "../../components/modals/TransactionModal";
 // replaced page icon with lucide ReceiptText for consistency
 
 const Transactions = () => {
@@ -39,6 +43,17 @@ const Transactions = () => {
 
   useEffect(() => {
     fetchTransactions();
+    
+    // Listen for transactions added from FAB
+    const handleTransactionAdded = () => {
+      fetchTransactions();
+    };
+    
+    window.addEventListener("transactionAdded", handleTransactionAdded);
+    
+    return () => {
+      window.removeEventListener("transactionAdded", handleTransactionAdded);
+    };
   }, []);
 
   const fetchTransactions = async () => {
@@ -364,90 +379,31 @@ const Transactions = () => {
 
       {/* Expense Modal */}
       {isExpModalOpen && (
-        <Modal
+        <TransactionModal
           title="Add Expense"
           onClose={() => setIsExpModalOpen(false)}
           onSubmit={() => handleAddTransaction(newExpense, "expense")}
         >
-          <ModalForm txn={newExpense} setTxn={setNewExpense} isExpense />
-        </Modal>
+          <TransactionModalForm
+            txn={newExpense}
+            setTxn={setNewExpense}
+            isExpense
+          />
+        </TransactionModal>
       )}
 
       {/* Income Modal */}
       {isIncModalOpen && (
-        <Modal
+        <TransactionModal
           title="Add Income"
           onClose={() => setIsIncModalOpen(false)}
           onSubmit={() => handleAddTransaction(newIncome, "income")}
         >
-          <ModalForm txn={newIncome} setTxn={setNewIncome} />
-        </Modal>
+          <TransactionModalForm txn={newIncome} setTxn={setNewIncome} />
+        </TransactionModal>
       )}
     </div>
   );
 };
-
-const Modal = ({ title, onClose, onSubmit, children }) => (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-10">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        <button onClick={onClose}>
-          <X size={20} />
-        </button>
-      </div>
-      {children}
-      <button
-        onClick={onSubmit}
-        className="bg-blue-600 text-white px-4 py-2 rounded-lg w-full hover:bg-blue-700"
-      >
-        {title}
-      </button>
-    </div>
-  </div>
-);
-
-const ModalForm = ({ txn, setTxn, isExpense = false }) => (
-  <>
-    <p>
-      {new Date(txn.date).toLocaleDateString()} - {txn.time}
-    </p>
-    <select
-      value={txn.category}
-      onChange={(e) => setTxn({ ...txn, category: e.target.value })}
-      className="border p-2 w-full rounded"
-    >
-      {isExpense ? (
-        <>
-          <option value="Food">Food</option>
-          <option value="Transport">Transport</option>
-          <option value="Entertainment">Entertainment</option>
-          <option value="Bills">Bills</option>
-        </>
-      ) : (
-        <>
-          <option value="Bonus">Bonus</option>
-          <option value="Business">Business</option>
-          <option value="Investments">Investments</option>
-          <option value="Other">Other</option>
-        </>
-      )}
-    </select>
-    <input
-      type="text"
-      placeholder="Description"
-      value={txn.description}
-      onChange={(e) => setTxn({ ...txn, description: e.target.value })}
-      className="border p-2 w-full rounded"
-    />
-    <input
-      type="number"
-      placeholder="Amount"
-      value={txn.amount}
-      onChange={(e) => setTxn({ ...txn, amount: e.target.value })}
-      className="border p-2 w-full rounded"
-    />
-  </>
-);
 
 export default Transactions;

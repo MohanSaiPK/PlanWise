@@ -9,11 +9,13 @@ import {
   getGoalWallet,
   addToGoalWallet,
   achieveGoal,
+  getAchievedGoals,
 } from "../controllers/GoalController.js";
 
 const router = express.Router();
 
 router.get("/", protect, getGoals);
+router.get("/achieved", protect, getAchievedGoals);
 router.post("/", protect, addGoals);
 router.put("/:editingGoalId", protect, editGoal);
 router.delete("/:goalId", protect, deleteGoal);

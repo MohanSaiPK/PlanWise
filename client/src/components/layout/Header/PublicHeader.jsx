@@ -10,7 +10,7 @@ const PublicHeader = () => {
         <DollarSign />
         <h1 className="text-2xl font-bold">Finance Tracker</h1>
       </div>
-      <div className="flex  items-center gap-4 ">
+      <div className="flex  text-l mr-32 items-center justify-start gap-16 ">
         <a href="#" className="hover:text-black text-gray-600 cursor-pointer ">
           Features
         </a>
@@ -23,6 +23,8 @@ const PublicHeader = () => {
         <a href="#" className="hover:text-black text-gray-600 cursor-pointer  ">
           Contact
         </a>
+      </div>
+      <div>
         {window.location.pathname !== "/login" && (
           <button
             className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer"
