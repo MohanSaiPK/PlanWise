@@ -5,14 +5,14 @@ import PublicFooter from "./Header/PublicFooter";
 
 const PublicLayout = () => {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="container flex-grow min-h-screen mt-10">
+      <main className="container flex-grow min-h-screen ">
         <Outlet />
       </main>
       <PublicFooter />
-    </>
+    </div>
   );
 };
 

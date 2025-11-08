@@ -7,6 +7,7 @@ import "swiper/css";
 import "swiper/css/effect-cards";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import EmblaCarousel from "../../components/ui/Carousel";
 
 const Goals = () => {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
@@ -573,12 +574,15 @@ const Goals = () => {
             No achieved goals yet. Keep working towards your goals!
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {achievedGoals.map((goal) => (
-              <div
-                key={goal._id}
-                className="relative rounded-2xl border-2 border-yellow-400 shadow-lg bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 p-5"
-              >
+          <EmblaCarousel
+            slides={achievedGoals}
+            options={{
+              align: "start",
+              loop: false,
+              slidesToScroll: 1,
+            }}
+            renderSlide={(goal) => (
+              <div className="relative rounded-2xl border-2 border-yellow-400 shadow-lg bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 p-5 h-full">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.15),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.12),transparent_40%)]" />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-3">
@@ -616,8 +620,8 @@ const Goals = () => {
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+          />
         )}
       </div>
 

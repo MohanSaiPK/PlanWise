@@ -7,19 +7,19 @@ import CountUp from "../../components/ui/CountUp";
 const LandingPage = () => {
   const navigate = useNavigate();
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black">
+    <div className="relative min-h-screen w-full overflow-hidden bg-black ">
       {/* Aurora Background */}
       <div className="absolute inset-0 z-0">
-        {/* <Aurora
+        <Aurora
           colorStops={["#f9a620", "#99d6ea", "#548c2f"]}
           blend={0.5}
           amplitude={2.0}
           speed={0.6}
-        /> */}
+        />
       </div>
 
       {/* Content on top */}
-      <div className="relative z-10 flex flex-col text-white items-center h-screen space-y-14 mt-14">
+      <div className="relative z-10 flex flex-col text-white items-center h-screen space-y-14 mt-20">
         <div className="flex flex-row items-center justify-center gap-2 border py-1 rounded-3xl px-4 mt-4 bg-white/10  backdrop-blur-sm">
           <Shield />
           <h1 className="text-sm font-bold">Trusted by 50,000+ investors</h1>

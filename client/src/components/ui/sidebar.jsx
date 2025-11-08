@@ -27,7 +27,7 @@ export const SidebarProvider = ({
 
 export const Sidebar = ({ children, open, setOpen, animate }) => {
   return (
-    <SidebarProvider open={open} setOpen={setOpen} animate={animate}>
+    <SidebarProvider open={open} setOpen={setOpen} animate={false}>
       {children}
     </SidebarProvider>
   );
@@ -48,7 +48,7 @@ export const DesktopSidebar = ({ className, children, ...props }) => {
     <>
       <motion.div
         className={cn(
-          "h-full px-4 py-4 hidden  md:flex md:flex-col bg-neutral-100 dark:bg-neutral-800 w-[300px] shrink-0",
+          "fixed top-20 left-0 h-[calc(100vh-5rem)] px-4 py-4 hidden md:flex md:flex-col bg-neutral-100 dark:bg-neutral-800 shrink-0 z-30 border-r border-neutral-200 dark:border-neutral-700",
           className
         )}
         animate={{
@@ -110,13 +110,25 @@ export const MobileSidebar = ({ className, children, ...props }) => {
   );
 };
 
-export const SidebarLink = ({ link, className, ...props }) => {
+export const SidebarLink = ({ link, className, onClick, ...props }) => {
   const { open, animate } = useSidebar();
-  return (
-    <a
-      href={link.href}
+  const isActive = link.active || false;
+
+  const handleClick = (e) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick(e);
+    }
+  };
+
+  const content = (
+    <div
+      onClick={handleClick}
       className={cn(
-        "flex items-center justify-start gap-2  group/sidebar py-2",
+        "flex items-center justify-start gap-2 group/sidebar py-2 px-3 rounded-lg cursor-pointer transition-colors",
+        isActive
+          ? "bg-blue-100 dark:bg-blue-900 font-semibold"
+          : "hover:bg-neutral-200 dark:hover:bg-neutral-700",
         className
       )}
       {...props}
@@ -131,6 +143,17 @@ export const SidebarLink = ({ link, className, ...props }) => {
       >
         {link.label}
       </motion.span>
-    </a>
+    </div>
   );
+
+  // If href is provided, use anchor tag, otherwise use div
+  if (link.href && !onClick) {
+    return (
+      <a href={link.href} className="block">
+        {content}
+      </a>
+    );
+  }
+
+  return content;
 };

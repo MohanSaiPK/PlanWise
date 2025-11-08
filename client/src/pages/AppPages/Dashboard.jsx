@@ -551,7 +551,7 @@ const Dashboard = () => {
             </div>
             <div className="w-full lg:w-1/2 border-2 rounded-xl p-3">
               <h1 className="text-center">Income Source Distribution</h1>
-              <div className="w-full h-64 lg:h-full p-3">
+              <div className="w-full h-64 lg:h-full py-5">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie

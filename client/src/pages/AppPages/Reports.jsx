@@ -224,14 +224,6 @@ const Reports = () => {
               strokeWidth={2}
               dot={{ r: 3 }}
             />
-            <Line
-              type="monotone"
-              dataKey="Score"
-              stroke="#a855f7"
-              strokeWidth={2}
-              yAxisId={0}
-              dot={{ r: 3 }}
-            />
           </LineChart>
         </ResponsiveContainer>
       </div>

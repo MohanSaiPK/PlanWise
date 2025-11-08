@@ -10,7 +10,7 @@ const MainLayout = () => {
     <>
       <MainNavbar />
       <MainSidebar />
-      <main className=" h-screen  overflow-y-auto overflow-x-hidden pl-64 pt-20">
+      <main className="h-screen overflow-y-auto overflow-x-hidden pl-[60px] md:pl-[300px] pt-20 transition-all duration-300">
         <Outlet />
       </main>
       <FloatingActionButton />
