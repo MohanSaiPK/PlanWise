@@ -9,6 +9,7 @@ import {
   IconLogout,
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
+import { logo } from "../../../assets/data/images.json";
 
 const MainSidebar = () => {
   const navigate = useNavigate();
@@ -66,8 +67,11 @@ const MainSidebar = () => {
   return (
     <Sidebar open={open} setOpen={setOpen} animate={true}>
       <SidebarBody className="justify-between gap-10">
-        <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-          {open ? <Logo /> : <LogoIcon />}
+        <div className="flex flex-2 flex-col overflow-x-hidden overflow-y-auto">
+          <div className="flex  items-center justify-start">
+            <img src={logo[0].source} alt="PlanWise" className="w-16 h-12" />
+            <p className="text-lg font-bold">PlanWise</p>
+          </div>
           <div className="mt-8 flex flex-col gap-2">
             {menuItems.map((item) => (
               <SidebarLink
@@ -94,35 +98,6 @@ const MainSidebar = () => {
         </div>
       </SidebarBody>
     </Sidebar>
-  );
-};
-
-export const Logo = () => {
-  return (
-    <a
-      href="#"
-      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black dark:text-white"
-    >
-      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="font-medium whitespace-pre text-black dark:text-white"
-      >
-        PlanWise
-      </motion.span>
-    </a>
-  );
-};
-
-export const LogoIcon = () => {
-  return (
-    <a
-      href="#"
-      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black dark:text-white"
-    >
-      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
-    </a>
   );
 };
 

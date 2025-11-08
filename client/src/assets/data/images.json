@@ -22,5 +22,11 @@
       "type": "owl",
       "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1762500195/owl_profile_mutmwf.png"
     }
+  ],
+  "logo": [
+    {
+      "type": "planwise",
+      "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1762608984/PW_logo_r66dop.png"
+    }
   ]
 }

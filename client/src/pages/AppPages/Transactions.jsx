@@ -7,6 +7,15 @@ import {
   Trash2,
   ReceiptText,
   BarChart3,
+  Goal,
+  Receipt,
+  Drama,
+  TrainFront,
+  Hamburger,
+  Shapes,
+  Briefcase,
+  TrendingUp,
+  Gift,
 } from "lucide-react";
 import IncomeCards from "../../components/cards/IncomeCards";
 import { useIncome } from "../../hooks/useIncome";
@@ -274,6 +283,40 @@ const Transactions = () => {
     0
   );
 
+  // Get icon for expense category
+  const getExpenseIcon = (category) => {
+    const iconProps = { size: 20, className: "text-red-500" };
+    switch (category) {
+      case "Goal":
+        return <Goal {...iconProps} />;
+      case "Bills":
+        return <Receipt {...iconProps} />;
+      case "Entertainment":
+        return <Drama {...iconProps} />;
+      case "Transport":
+        return <TrainFront {...iconProps} />;
+      case "Food":
+        return <Hamburger {...iconProps} />;
+      default:
+        return <Shapes {...iconProps} />;
+    }
+  };
+
+  // Get icon for income category
+  const getIncomeIcon = (category) => {
+    const iconProps = { size: 20, className: "text-green-500" };
+    switch (category) {
+      case "Bonus":
+        return <Gift {...iconProps} />;
+      case "Business":
+        return <Briefcase {...iconProps} />;
+      case "Investments":
+        return <TrendingUp {...iconProps} />;
+      default:
+        return <Shapes {...iconProps} />;
+    }
+  };
+
   // Custom tooltip for pie chart
   const CustomTooltip = ({ active, payload, total }) => {
     if (active && payload && payload.length) {
@@ -451,7 +494,7 @@ const Transactions = () => {
                   className="p-4 flex items-center justify-between"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-10 rounded-full bg-red-500" />
+                    {getExpenseIcon(t.category)}
                     <div className="flex flex-col">
                       <div className="font-medium text-sm">
                         {t.description || t.category}
@@ -466,8 +509,16 @@ const Transactions = () => {
                       -₹{t.amount}
                     </div>
                     <button
-                      className="p-2 rounded hover:bg-gray-100"
-                      onClick={() => handleDeleteTransaction(t._id)}
+                      className={`p-2 rounded hover:bg-gray-100 ${
+                        t.category === "Goal"
+                          ? " text-gray-400 disabled:cursor-not-allowed"
+                          : "text-red-600 disabled:cursor-not-allowed"
+                      }`}
+                      onClick={() =>
+                        t.category === "Goal"
+                          ? null
+                          : handleDeleteTransaction(t._id)
+                      }
                       aria-label="Delete expense"
                     >
                       <Trash2 size={18} />
@@ -599,7 +650,7 @@ const Transactions = () => {
                   className="p-4 flex items-center justify-between"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-10 rounded-full bg-green-500" />
+                    {getIncomeIcon(t.category)}
                     <div className="flex flex-col">
                       <div className="font-medium text-sm">
                         {t.description || t.category}

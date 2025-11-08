@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, Bell, Settings, LogOut, ChevronDown } from "lucide-react";
 import SettingsModal from "../../Settings/SettingsModal";
+import imagesData from "../../../assets/data/images.json";
 
 const MainNavbar = () => {
   const navigate = useNavigate();
@@ -61,10 +62,11 @@ const MainNavbar = () => {
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             aria-label="Profile menu"
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold shadow-md border-2 border-white dark:border-neutral-800">
-              {/* Placeholder for user image - replace with actual image later */}
-              <span className="text-sm">U</span>
-            </div>
+            <img
+              src={imagesData.profile[0].source}
+              alt="Profile"
+              className="w-10 h-10 rounded-full"
+            />
             <ChevronDown
               size={16}
               className={`text-foreground transition-transform ${
