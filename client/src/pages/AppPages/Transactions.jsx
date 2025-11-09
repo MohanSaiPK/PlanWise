@@ -288,17 +288,17 @@ const Transactions = () => {
     const iconProps = { size: 20, className: "text-red-500" };
     switch (category) {
       case "Goal":
-        return <Goal {...iconProps} />;
+        return <Goal {...iconProps} className="text-yellow-500" />;
       case "Bills":
-        return <Receipt {...iconProps} />;
+        return <Receipt {...iconProps} className="text-zinc-500" />;
       case "Entertainment":
-        return <Drama {...iconProps} />;
+        return <Drama {...iconProps} className="text-blue-500" />;
       case "Transport":
-        return <TrainFront {...iconProps} />;
+        return <TrainFront {...iconProps} className="text-emerald-500" />;
       case "Food":
-        return <Hamburger {...iconProps} />;
+        return <Hamburger {...iconProps} className="text-amber-500" />;
       default:
-        return <Shapes {...iconProps} />;
+        return <Shapes {...iconProps} className="text-gray-500" />;
     }
   };
 
@@ -307,13 +307,13 @@ const Transactions = () => {
     const iconProps = { size: 20, className: "text-green-500" };
     switch (category) {
       case "Bonus":
-        return <Gift {...iconProps} />;
+        return <Gift {...iconProps} className="text-pink-500" />;
       case "Business":
-        return <Briefcase {...iconProps} />;
+        return <Briefcase {...iconProps} className="text-lime-500" />;
       case "Investments":
-        return <TrendingUp {...iconProps} />;
+        return <TrendingUp {...iconProps} className="text-teal-500" />;
       default:
-        return <Shapes {...iconProps} />;
+        return <Shapes {...iconProps} className="text-gray-500" />;
     }
   };
 

@@ -256,7 +256,7 @@ const Dashboard = () => {
   // -------- SCORE CALCULATION --------
 
   const score = useMemo(() => {
-    const weights = { goal: 0.6, spending: 0.05, ratio: 0.35 };
+    const weights = { goal: 0.25, spending: 0.35, ratio: 0.4 };
     let total = 0;
     let denom = 0;
 
