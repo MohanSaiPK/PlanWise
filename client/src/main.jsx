@@ -8,9 +8,7 @@ import { IncomeProvider } from "./context/IncomeContext.jsx";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
-      <IncomeProvider>
-        <App />
-      </IncomeProvider>
+      <App />
     </BrowserRouter>
   </StrictMode>
 );

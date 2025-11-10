@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { API_BASE_URL } from "../api";
+import { API_BASE_URL } from "../api.js";
 
 const IncomeContext = createContext();
 
@@ -29,6 +29,7 @@ export const IncomeProvider = ({ children }) => {
   const resetIncomes = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) return; // skip if no token
       const response = await fetch(`${API_BASE_URL}/income-expense`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -54,6 +55,12 @@ export const IncomeProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // user not logged in yet → skip fetch
+      setLoading(false);
+      return;
+    }
     resetIncomes().finally(() => setLoading(false));
   }, [resetIncomes]);
 

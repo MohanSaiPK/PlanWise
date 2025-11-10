@@ -8,22 +8,25 @@ import ProtectedRoute from "./ProtectedRoute.jsx";
 import Transactions from "../pages/AppPages/Transactions.jsx";
 import Goals from "../pages/AppPages/Goals.jsx";
 import Reports from "../pages/AppPages/Reports.jsx";
+import { IncomeProvider } from "../context/IncomeContext.jsx";
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      <Route element={<ProtectedRoute />}>
-        <Route path="firstlogin" element={<FirstLogin />} />
-        <Route element={<SetupGuard />}>
-          <Route element={<MainLayout />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="transactions" element={<Transactions />} />
-            <Route path="goals" element={<Goals />} />
-            <Route path="reports" element={<Reports />} />
+    <IncomeProvider>
+      <Routes>
+        <Route element={<ProtectedRoute />}>
+          <Route path="firstlogin" element={<FirstLogin />} />
+          <Route element={<SetupGuard />}>
+            <Route element={<MainLayout />}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="transactions" element={<Transactions />} />
+              <Route path="goals" element={<Goals />} />
+              <Route path="reports" element={<Reports />} />
+            </Route>
           </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </IncomeProvider>
   );
 };
 
