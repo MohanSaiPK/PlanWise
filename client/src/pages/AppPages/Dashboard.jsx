@@ -12,7 +12,18 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { LayoutDashboard } from "lucide-react";
+import {
+  LayoutDashboard,
+  Goal,
+  Receipt,
+  Drama,
+  TrainFront,
+  Hamburger,
+  Shapes,
+  Gift,
+  Briefcase,
+  TrendingUp,
+} from "lucide-react";
 import { GaugeComponent } from "react-gauge-component";
 import { modes } from "../../assets/data/images.json";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
@@ -29,6 +40,24 @@ const Dashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [payDay, setPayDay] = useState(null);
   const [goals, setGoals] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Track mobile state with debounce
+  useEffect(() => {
+    let timeoutId;
+    const checkMobile = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setIsMobile(window.innerWidth < 768);
+      }, 150);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
 
   // -------- DATA FETCHING --------
   useEffect(() => {
@@ -330,29 +359,96 @@ const Dashboard = () => {
     [recentTransactions]
   );
 
+  // Get icon for expense category
+  const getExpenseIcon = (category) => {
+    const iconProps = { size: 18, className: "text-red-500 flex-shrink-0" };
+    switch (category) {
+      case "Goal":
+        return (
+          <Goal {...iconProps} className="text-yellow-500 flex-shrink-0" />
+        );
+      case "Bills":
+        return (
+          <Receipt {...iconProps} className="text-zinc-500 flex-shrink-0" />
+        );
+      case "Entertainment":
+        return <Drama {...iconProps} className="text-blue-500 flex-shrink-0" />;
+      case "Transport":
+        return (
+          <TrainFront
+            {...iconProps}
+            className="text-emerald-500 flex-shrink-0"
+          />
+        );
+      case "Food":
+        return (
+          <Hamburger {...iconProps} className="text-amber-500 flex-shrink-0" />
+        );
+      default:
+        return (
+          <Shapes {...iconProps} className="text-gray-500 flex-shrink-0" />
+        );
+    }
+  };
+
+  // Get icon for income category
+  const getIncomeIcon = (category) => {
+    const iconProps = { size: 18, className: "text-green-500 flex-shrink-0" };
+    switch (category) {
+      case "Bonus":
+        return <Gift {...iconProps} className="text-pink-500 flex-shrink-0" />;
+      case "Business":
+        return (
+          <Briefcase {...iconProps} className="text-lime-500 flex-shrink-0" />
+        );
+      case "Investments":
+        return (
+          <TrendingUp {...iconProps} className="text-teal-500 flex-shrink-0" />
+        );
+      default:
+        return (
+          <Shapes {...iconProps} className="text-gray-500 flex-shrink-0" />
+        );
+    }
+  };
+
   return (
-    <div className="text-center flex flex-col justify-center items-center w-full">
-      <div className="flex flex-row items-center justify-center gap-4  w-full m-4 p-2">
-        <div className="flex items-center justify-center w-14 h-14 rounded-xl p-2 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow">
+    <div className="flex flex-col w-full px-2 md:px-4 lg:px-6 py-4 md:py-6">
+      {/* Header with Income Cards - Hide icon on mobile */}
+      <h1 className="text-2xl md:text-3xl mb-4  font-semibold">Dashboard</h1>
+      <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 w-full mb-4 md:mb-6">
+        <div className="hidden md:flex items-center justify-center w-14 h-14 rounded-xl p-2 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow flex-shrink-0">
           <LayoutDashboard className="w-8 h-8" />
         </div>
-        <div className="flex flex-1 items-start justify-center">
+        <div className="flex flex-1 items-start justify-center w-full">
           <IncomeCards data={incomeData} loading={loading} />
         </div>
       </div>
-      {/* COL 1 */}
-      <div className="w-full flex px-10 space-x-6  ">
-        <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
-          <h1>Your Score!</h1>
-          <div className="w-full flex space-x-4">
-            <div className=" w-2/3 border-2 rounded-xl p-6 flex flex-col items-center justify-center   shadow-md">
-              <h2 className="text-lg font-semibold">Financial Score</h2>
-              <h1 className={`text-5xl font-bold ${color}`}>{score}</h1>
-              <p className={`text-xl font-medium ${color}`}>{grade}</p>
-              <p className="text-sm text-gray-600">{label}</p>
+
+      {/* Main Content - Stack on mobile, side-by-side on desktop */}
+      <div className="w-full flex flex-col items-between lg:flex-row gap-4 md:gap-6">
+        {/* COL 1 - Score Section */}
+        <div className="w-full lg:w-1/2 border-2 rounded-xl p-3 md:p-4 lg:p-6 space-y-3 md:space-y-4">
+          <h1 className="text-lg md:text-xl font-bold text-gray-900 hidden md:block">
+            Your Score!
+          </h1>
+          <div className="w-full flex  sm:flex-row gap-3 md:gap-4">
+            <div className="w-full sm:w-2/3 border-2 rounded-xl p-4 md:p-6 flex flex-col items-center justify-center shadow-md">
+              <h2 className="text-sm md:text-base font-semibold text-gray-700">
+                Financial Score
+              </h2>
+              <h1 className={`text-4xl md:text-5xl font-bold ${color}`}>
+                {score}
+              </h1>
+              <p className={`text-lg md:text-xl font-semibold ${color}`}>
+                {grade}
+              </p>
+              <p className="text-xs md:text-sm font-medium text-gray-600">
+                {label}
+              </p>
             </div>
 
-            <div className="w-1/3 border-2 rounded-xl">
+            <div className="w-full sm:w-1/3 border-2 rounded-xl min-h-[150px] md:min-h-[200px]">
               <img
                 src={getMascot(score)}
                 alt="Financial mascot"
@@ -360,143 +456,324 @@ const Dashboard = () => {
               />
             </div>
           </div>
-          <div className="flex h-46 space-x-4">
-            <div className="border-2 w-1/3 rounded-xl p-4">
-              {nearestGoal ? (
-                <div className="flex flex-col gap-2 h-full">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-base md:text-lg text-gray-900 line-clamp-1">
-                      {nearestGoal.name}
-                    </h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
-                      {nearestGoal.priority || ""}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-gray-500 mb-1">
-                    {new Date(nearestGoal.startDate).toLocaleDateString()} →{" "}
-                    {new Date(nearestGoal.endDate).toLocaleDateString()}
-                  </div>
-                  <div className="flex items-center gap-2 mt-2 justify-between w-full text-sm flex-wrap md:flex-nowrap">
-                    <div>
-                      <div className="flex flex-col items-center flex-1 min-w-[70px]">
-                        <span className="text-xs text-gray-500">Target</span>
-                        <span className="font-semibold text-gray-700">
-                          ₹{nearestGoal.amount ?? nearestGoal.targetAmount}
+          <div className="flex flex-col md:flex-row gap-2 md:gap-4">
+            {/* Mobile: First row with Goal and Spending Speed */}
+            <div className="flex flex-row gap-2 md:hidden">
+              <div className="border-2 w-1/2 rounded-xl p-3 flex flex-col justify-between">
+                {nearestGoal ? (
+                  <div className="flex flex-col gap-2 h-full">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-semibold text-xs text-gray-900 flex-1 truncate">
+                        {nearestGoal.name}
+                      </h3>
+                      {nearestGoal.priority && (
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white whitespace-nowrap font-medium flex-shrink-0">
+                          {nearestGoal.priority}
                         </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 font-medium">
+                      {new Date(nearestGoal.startDate).toLocaleDateString()} →{" "}
+                      {new Date(nearestGoal.endDate).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1 md:gap-1 justify-between md:justify-center w-full flex-1">
+                      <div className="flex gap-1 md:gap-2 flex-1">
+                        <div className="flex flex-col items-start flex-1 min-w-0">
+                          <span className="text-xs text-gray-500 font-medium">
+                            Target
+                          </span>
+                          <span className="font-semibold text-xs text-gray-700 truncate w-full">
+                            ₹{nearestGoal.amount ?? nearestGoal.targetAmount}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-start flex-1 min-w-0">
+                          <span className="text-xs text-gray-500 font-medium">
+                            Allocated
+                          </span>
+                          <span className="font-semibold text-xs text-gray-700 truncate w-full">
+                            ₹
+                            {nearestGoal.allocated ??
+                              nearestGoal.savedAmount ??
+                              0}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex flex-col items-center flex-1 min-w-[70px]">
-                        <span className="text-xs text-gray-500">Allocated</span>
-                        <span className="font-semibold text-gray-700">
-                          ₹
-                          {nearestGoal.allocated ??
-                            nearestGoal.savedAmount ??
-                            0}
-                        </span>
+                      <div className="flex items-center justify-center mx-auto self-end md:self-center">
+                        <div className="flex items-center justify-center w-12 h-12">
+                          <CircularProgressbar
+                            value={Math.max(
+                              0,
+                              Math.min(100, Math.round(goalProgress ?? 0))
+                            )}
+                            text={`${Math.max(
+                              0,
+                              Math.min(100, Math.round(goalProgress ?? 0))
+                            )}%`}
+                            styles={buildStyles({
+                              pathColor: "#22c55e",
+                              textColor: "#065f46",
+                              trailColor: "#e5e7eb",
+                              strokeLinecap: "round",
+                              textSize: "8px",
+                            })}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-center flex-1 min-w-[48px]">
-                      <div className="w-12 h-12">
-                        <CircularProgressbar
-                          value={Math.max(
-                            0,
-                            Math.min(100, Math.round(goalProgress ?? 0))
-                          )}
-                          text={`${Math.max(
-                            0,
-                            Math.min(100, Math.round(goalProgress ?? 0))
-                          )}%`}
-                          styles={buildStyles({
-                            pathColor: "#22c55e",
-                            textColor: "#065f46",
-                            trailColor: "#e5e7eb",
-                            strokeLinecap: "round",
-                            textSize: "15px",
-                          })}
-                        />
-                      </div>
-                    </div>
                   </div>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 p-2">No Active Goal</p>
-              )}
-            </div>
-            <div className="border-2 w-1/3 rounded-xl flex flex-col">
-              <p className="text-center font-medium ">Spending Speed:</p>
-              <div className="w-full relative aspect-square max-h-64 mx-auto">
-                <GaugeComponent
-                  style={{
-                    position: "absolute",
-                    height: "100%",
-                    width: "100%",
-                  }}
-                  type="radial"
-                  arc={{
-                    colorArray: ["#00FF15", "#FF2121"],
-                    padding: 0.03,
-                    subArcs: [
-                      { limit: 20 },
-                      { limit: 40 },
-                      { limit: 60 },
-                      { limit: 80 },
-                      { limit: 100 },
-                    ],
-                  }}
-                  labels={{
-                    valueLabel: {
-                      matchColorWithArc: true,
-                      style: {
-                        fontSize: 48,
-                        fontWeight: "bold",
-                        textShadow: "none",
+                ) : (
+                  <p className="text-xs text-gray-500 text-center font-medium flex items-center justify-center h-full">
+                    No Active Goal
+                  </p>
+                )}
+              </div>
+              <div className="border-2 w-1/2 rounded-xl flex flex-col justify-center items-center p-2">
+                <p className="text-center font-semibold text-xs text-gray-700 mb-2">
+                  Spending Speed
+                </p>
+                <div className="w-full relative aspect-square max-h-32 mx-auto flex items-center justify-center">
+                  <GaugeComponent
+                    style={{
+                      position: "absolute",
+                      height: "100%",
+                      width: "100%",
+                    }}
+                    type="radial"
+                    arc={{
+                      colorArray: ["#00FF15", "#FF2121"],
+                      padding: 0.03,
+                      subArcs: [
+                        { limit: 20 },
+                        { limit: 40 },
+                        { limit: 60 },
+                        { limit: 80 },
+                        { limit: 100 },
+                      ],
+                    }}
+                    labels={{
+                      valueLabel: {
+                        matchColorWithArc: true,
+                        style: {
+                          fontSize: 24,
+                          fontWeight: "bold",
+                          textShadow: "none",
+                        },
                       },
-                    },
-                    tickLabels: {
-                      hideMinMax: true,
-                    },
-                  }}
-                  pointer={{ type: "needle", animationDelay: 1000 }}
-                  value={
-                    typeof spendingSpeedScore === "number"
-                      ? Math.max(0, Math.min(100, 100 - spendingSpeedScore))
-                      : 0
-                  }
-                />
+                      tickLabels: {
+                        hideMinMax: true,
+                      },
+                    }}
+                    pointer={{ type: "needle", animationDelay: 1000 }}
+                    value={
+                      typeof spendingSpeedScore === "number"
+                        ? Math.max(0, Math.min(100, 100 - spendingSpeedScore))
+                        : 0
+                    }
+                  />
+                </div>
               </div>
             </div>
-            <div className="border-2 w-1/3 rounded-xl p-3 flex flex-col">
-              <h3 className="font-semibold text-xs mb-1 text-gray-700">
+
+            <div className="hidden md:flex md:flex-row md:h-64 md:gap-4  w-full">
+              <div className="border-2 w-1/3 rounded-xl p-4 flex flex-col md:justify-between justify-between items-center h-full">
+                {nearestGoal ? (
+                  <div className="flex flex-col gap-2 md:gap-3 h-full">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-semibold text-sm lg:text-base text-gray-900 flex-1">
+                        {nearestGoal.name}
+                      </h3>
+                      {nearestGoal.priority && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white whitespace-nowrap font-medium">
+                          {nearestGoal.priority}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500 font-medium">
+                      {new Date(nearestGoal.startDate).toLocaleDateString()} →{" "}
+                      {new Date(nearestGoal.endDate).toLocaleDateString()}
+                    </div>
+                    <div className="flex flex-col gap-1 md:gap-2 flex-1 justify-between md:justify-start">
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-start flex-1 min-w-0">
+                          <span className="text-xs text-gray-500 font-medium">
+                            Target
+                          </span>
+                          <span className="font-semibold text-base text-gray-700 truncate w-full">
+                            ₹{nearestGoal.amount ?? nearestGoal.targetAmount}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-start flex-1 min-w-0">
+                          <span className="text-xs text-gray-500 font-medium">
+                            Allocated
+                          </span>
+                          <span className="font-semibold text-base text-gray-700 truncate w-full">
+                            ₹
+                            {nearestGoal.allocated ??
+                              nearestGoal.savedAmount ??
+                              0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <div className="flex items-center justify-center w-16 h-16">
+                          <CircularProgressbar
+                            value={Math.max(
+                              0,
+                              Math.min(100, Math.round(goalProgress ?? 0))
+                            )}
+                            text={`${Math.max(
+                              0,
+                              Math.min(100, Math.round(goalProgress ?? 0))
+                            )}%`}
+                            styles={buildStyles({
+                              pathColor: "#22c55e",
+                              textColor: "#065f46",
+                              trailColor: "#e5e7eb",
+                              strokeLinecap: "round",
+                              textSize: "10px",
+                            })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-base text-gray-500 text-center font-medium flex items-center justify-center h-full">
+                    No Active Goal
+                  </p>
+                )}
+              </div>
+              <div className="border-2 w-1/3 rounded-xl flex flex-col justify-center items-center p-3 h-full">
+                <p className="text-center font-semibold text-base text-gray-700 mb-3">
+                  Spending Speed
+                </p>
+                <div className="w-full relative aspect-square max-h-64 mx-auto flex items-center justify-center">
+                  <GaugeComponent
+                    style={{
+                      position: "absolute",
+                      height: "100%",
+                      width: "100%",
+                    }}
+                    type="radial"
+                    arc={{
+                      colorArray: ["#00FF15", "#FF2121"],
+                      padding: 0.03,
+                      subArcs: [
+                        { limit: 20 },
+                        { limit: 40 },
+                        { limit: 60 },
+                        { limit: 80 },
+                        { limit: 100 },
+                      ],
+                    }}
+                    labels={{
+                      valueLabel: {
+                        matchColorWithArc: true,
+                        style: {
+                          fontSize: 40,
+                          fontWeight: "bold",
+                          textShadow: "none",
+                        },
+                      },
+                      tickLabels: {
+                        hideMinMax: true,
+                      },
+                    }}
+                    pointer={{ type: "needle", animationDelay: 1000 }}
+                    value={
+                      typeof spendingSpeedScore === "number"
+                        ? Math.max(0, Math.min(100, 100 - spendingSpeedScore))
+                        : 0
+                    }
+                  />
+                </div>
+              </div>
+              <div className="border-2 w-1/3 rounded-xl p-3 flex flex-col h-full">
+                <h3 className="font-semibold text-sm mb-2 text-gray-700">
+                  Recent Transactions
+                </h3>
+                <div className="flex flex-col gap-2 min-h-0 flex-1">
+                  {top3Transactions.length === 0 ? (
+                    <p className="text-xs text-gray-500 text-center py-2 font-medium">
+                      No recent transactions
+                    </p>
+                  ) : (
+                    top3Transactions.map((txn) => (
+                      <div
+                        key={txn._id}
+                        className={`p-2 rounded-lg border ${
+                          txn.type === "income"
+                            ? "bg-green-50 border-green-200"
+                            : "bg-red-50 border-red-200"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-col items-start justify-center min-w-0 flex-1">
+                            <div className="text-sm flex items-center space-x-2 font-medium text-gray-900 truncate w-full">
+                              {txn.type === "income"
+                                ? getIncomeIcon(txn.category)
+                                : getExpenseIcon(txn.category)}
+                              <p className="truncate">
+                                {txn.description === "Added to Goals Wallet"
+                                  ? "+ Goals Wallet"
+                                  : txn.description}
+                              </p>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 font-medium">
+                              {new Date(txn.date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <span
+                            className={`font-semibold text-sm whitespace-nowrap ${
+                              txn.type === "income"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {txn.type === "income" ? "+" : "-"}₹{txn.amount}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile: Recent Transactions in separate row with horizontal scroll */}
+            <div className="border-2 rounded-xl p-2 md:hidden flex flex-col">
+              <h3 className="font-semibold text-xs mb-2 text-gray-700">
                 Recent Transactions
               </h3>
-              <div className="flex flex-col space-y-1  min-h-0">
+              <div className="flex flex-row gap-2 overflow-x-auto pb-1 -mx-2 px-2">
                 {top3Transactions.length === 0 ? (
-                  <p className="text-[10px] text-gray-500 text-center py-2">
+                  <p className="text-xs text-gray-500 text-center py-2 font-medium w-full">
                     No recent transactions
                   </p>
                 ) : (
                   top3Transactions.map((txn) => (
                     <div
                       key={txn._id}
-                      className={`p-1 rounded border ${
+                      className={`p-2 rounded-lg border flex-shrink-0 w-[200px] ${
                         txn.type === "income"
                           ? "bg-green-50 border-green-200"
-                          : "bg-red-100 border-red-200"
+                          : "bg-red-50 border-red-200"
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex flex-col items-start justify-center min-w-0">
-                          <div className="text-[11px] flex space-x-1font-medium text-gray-900 truncate">
-                            <p>em</p>
-                            <p className="">
-                              {txn.description === "Added to Goals Wallet"
-                                ? "+ Goals Wallet"
-                                : txn.description}
-                            </p>
-                          </div>
-                          <p className="text-[9px] text-gray-500">
-                            {new Date(txn.date).toLocaleDateString()}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center space-x-2 font-medium text-gray-900">
+                          {txn.type === "income"
+                            ? getIncomeIcon(txn.category)
+                            : getExpenseIcon(txn.category)}
+                          <p className="text-xs truncate flex-1">
+                            {txn.description === "Added to Goals Wallet"
+                              ? "+ Goals Wallet"
+                              : txn.description}
                           </p>
                         </div>
+                        <p className="text-xs text-gray-500 font-medium">
+                          {new Date(txn.date).toLocaleDateString()}
+                        </p>
                         <span
                           className={`font-semibold text-xs whitespace-nowrap ${
                             txn.type === "income"
@@ -514,55 +791,116 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        {/* COL 2 */}
-        <div className="w-1/2 border-2 rounded-xl p-6 space-y-4">
-          <h1 className="w-full">Financial Health Overview</h1>
-          <div className="flex w-full flex-col lg:flex-row lg:h-80 space-x-0 lg:space-x-6 space-y-6 lg:space-y-0">
-            <div className="w-full lg:w-1/2 border-2 rounded-xl p-3 flex flex-col">
-              <p className="text-center mb-2">Income vs Expense</p>
-              <div className="flex-1">
+        {/* COL 2 - Financial Health Overview */}
+        <div className="w-full lg:w-1/2 border-2 rounded-xl p-3 md:p-4 lg:p-6 space-y-3 md:space-y-4">
+          <h1 className="w-full text-lg md:text-xl font-bold text-gray-900">
+            Financial Health Overview
+          </h1>
+          <div className="flex w-full md:flex-col lg:flex-row gap-4 lg:gap-6">
+            <div className="w-full lg:w-1/2 border-2 rounded-xl p-2 md:p-3 flex flex-col">
+              <p className="text-center mb-2 text-sm md:text-base font-semibold text-gray-700">
+                Income vs Expense
+              </p>
+              <div className="flex-1 min-h-[200px] md:min-h-[300px] lg:min-h-[350px] w-full">
                 {!loading && totalData.length > 0 && (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={totalData}
-                      margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                      margin={{
+                        top: 20,
+                        right: 10,
+                        left: isMobile ? 0 : 10,
+                        bottom: 5,
+                      }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#e5e7eb"
+                        opacity={0.5}
+                      />
+                      <XAxis
+                        dataKey="name"
+                        fontSize={isMobile ? 10 : 12}
+                        tick={{ fill: "#6b7280" }}
+                        axisLine={{ stroke: "#d1d5db" }}
+                      />
+                      <YAxis
+                        width={isMobile ? 50 : 60}
+                        fontSize={isMobile ? 10 : 12}
+                        tick={{ fill: "#6b7280" }}
+                        axisLine={{ stroke: "#d1d5db" }}
+                        tickFormatter={(value) =>
+                          `₹${
+                            value >= 1000
+                              ? (value / 1000).toFixed(1) + "k"
+                              : value
+                          }`
+                        }
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(255, 255, 255, 0.95)",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          padding: "8px 12px",
+                          fontSize: isMobile ? "11px" : "12px",
+                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                        }}
+                        formatter={(value) =>
+                          `₹${value.toLocaleString("en-IN")}`
+                        }
+                      />
+                      <Legend
+                        wrapperStyle={{
+                          fontSize: isMobile ? "8px" : "12px",
+                          textAlign: "center",
+                          paddingTop: "5px",
+                        }}
+                        iconType="square"
+                      />
                       <Bar
                         dataKey="exp"
                         stackId="a"
                         fill="#ef4444"
-                        radius={[4, 4, 0, 0]}
+                        radius={[6, 6, 0, 0]}
+                        name="Expenses"
                       />
                       <Bar
                         dataKey="rem"
                         stackId="a"
                         fill="#22c55e"
-                        radius={[4, 4, 0, 0]}
+                        radius={[6, 6, 0, 0]}
+                        name="Remaining"
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </div>
-            <div className="w-full lg:w-1/2 border-2 rounded-xl p-3">
-              <h1 className="text-center">Income Source Distribution</h1>
-              <div className="w-full h-64 lg:h-full py-5">
+            <div className="w-full flex flex-col items-center justify-between lg:w-1/2 border-2 rounded-xl p-2 md:p-3">
+              <h1 className="text-center text-sm md:text-base mb-2 font-semibold text-gray-700">
+                Income Source Distribution
+              </h1>
+              <div className="w-full h-64 lg:h-[250px] py-2 md:py-3 ">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart className="w-full h-full flex">
                     <Pie
                       data={baseIncomeData}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius="45%"
-                      outerRadius="75%"
-                      label
+                      innerRadius="40%"
+                      outerRadius="60%"
+                      label={({ percent }) =>
+                        percent > 0 ? `${(percent * 100).toFixed(0)}%` : ""
+                      }
+                      labelLine={true}
+                      labelStyle={{
+                        fontSize: isMobile ? "10px" : "12px",
+                        fontWeight: "500",
+                        fill: "#374151",
+                      }}
                     >
                       {baseIncomeData.map((entry, index) => (
                         <Cell
@@ -572,14 +910,18 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip />
-                    <Legend />
+                    <Legend
+                      wrapperStyle={{ fontSize: isMobile ? "8px" : "12px" }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
-          <div className="w-full border-2 h-16">
-            <div>AI Tip</div>
+          <div className="w-full border-2 rounded-xl p-3 md:p-4 min-h-[50px] md:h-16 flex items-center justify-center">
+            <div className="text-sm md:text-base font-semibold text-gray-700">
+              AI Tip
+            </div>
           </div>
         </div>
       </div>

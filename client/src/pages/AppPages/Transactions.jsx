@@ -45,6 +45,16 @@ const Transactions = () => {
   const [incomeFilterCategory, setIncomeFilterCategory] = useState("All");
   const [showExpenseChart, setShowExpenseChart] = useState(false);
   const [showIncomeChart, setShowIncomeChart] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const [isExpModalOpen, setIsExpModalOpen] = useState(false);
   const [isIncModalOpen, setIsIncModalOpen] = useState(false);
@@ -338,29 +348,17 @@ const Transactions = () => {
   return (
     <div className=" space-y-0">
       {/* Header */}
+      <h1 className="text-2xl md:text-3xl ml-5 mt-4  font-semibold">
+        Transactions
+      </h1>
       <div className="flex items-center justify-center gap-4 w-full">
-        <div className="flex flex-row items-center justify-center gap-4  w-full m-4 p-2">
-          <div className="flex items-center justify-center w-14 h-14 rounded-xl p-2 bg-gradient-to-br from-rose-500 via-orange-500 to-yellow-500 text-white shadow">
-            <ReceiptText className="w-8 h-8" />
+        <div className="flex flex-row items-center justify-center gap-4  w-full m-4 md:p-2 ">
+          <div className=" items-center justify-center w-14 h-14 rounded-xl p-2 bg-gradient-to-br from-rose-500 via-orange-500 to-yellow-500 text-white shadow hidden md:block">
+            <ReceiptText className="w-8 h-8 " />
           </div>
           <div className="flex flex-1 items-start justify-center">
             <IncomeCards data={incomeData} loading={loading} />
           </div>
-
-          {/* <div className="flex gap-2">
-            <button
-              onClick={openExpenseModal}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
-            >
-              <PlusCircle size={20} />
-            </button>
-            <button
-              onClick={openIncomeModal}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700"
-            >
-              <PlusCircle size={20} />
-            </button>
-          </div> */}
         </div>
       </div>
 
@@ -370,27 +368,29 @@ const Transactions = () => {
           Loading...
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 ">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-2 md:gap-6 px-6 ">
           {/* Expenses Column */}
+          <h3 className="font-semibold whitespace-nowrap text-xs md:text-base flex-shrink-0">
+            Expenses
+          </h3>
           <div className="bg-white shadow rounded-lg overflow-hidden border-1 border-divider">
-            <div className="px-4 py-3 border-b">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1">
-                  <h3 className="font-semibold whitespace-nowrap">Expenses</h3>
-                  <div className="relative flex items-center justify-center rounded-lg border-1 border-divider">
+            <div className="px-2 md:px-4 py-2 md:py-3 border-b">
+              <div className="flex items-center justify-between gap-1 md:gap-2 w-full overflow-x-auto">
+                <div className="flex items-center gap-1 md:gap-2 flex-1 min-w-0">
+                  <div className="relative flex items-center justify-center rounded-lg border-1 border-divider w-24 md:w-48 flex-shrink-0">
                     <Input
                       classNames={{
-                        base: "w-48 h-10",
+                        base: "w-24 mr-2 md:mr-4 md:w-48 h-8 md:h-10",
                         mainWrapper: "h-full",
-                        input: "text-xs focus:outline-none",
+                        input: "text-[10px] md:text-xs focus:outline-none",
                         inputWrapper:
                           "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20 border-none shadow-none focus-within:ring-0 focus-within:ring-offset-0 focus-within:border-none",
                       }}
-                      placeholder="Search expenses..."
+                      placeholder="Search..."
                       size="sm"
                       startContent={
-                        <div className="pl-2 pr-2">
-                          <SearchIcon size={16} />
+                        <div className="pl-1 md:pl-2 pr-1 md:pr-2">
+                          <SearchIcon className="w-2 h-3 md:w-4 md:h-4" />
                         </div>
                       }
                       type="search"
@@ -399,23 +399,23 @@ const Transactions = () => {
                     />
                     {expenseSearch && (
                       <button
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+                        className="absolute right-1 md:right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
                         onClick={() => setExpenseSearch("")}
                         aria-label="Clear search"
                       >
-                        <X size={16} />
+                        <X size={12} className="md:w-4 md:h-4" />
                       </button>
                     )}
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-shrink-0">
                     <Filter
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                      size={16}
+                      className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none md:w-4 md:h-4"
+                      size={12}
                     />
                     <select
                       value={expenseFilterCategory}
                       onChange={(e) => setExpenseFilterCategory(e.target.value)}
-                      className="h-10 pl-9 pr-4 py-2 text-xs border-1 border-divider rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 bg-default-400/20 dark:bg-default-500/20 whitespace-nowrap"
+                      className="h-8 md:h-10 pl-7 md:pl-9 pr-2 md:pr-4 py-1 md:py-2 text-[10px] md:text-xs border-1 border-divider rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 bg-default-400/20 dark:bg-default-500/20 whitespace-nowrap"
                     >
                       <option value="All">All</option>
                       <option value="Food">Food</option>
@@ -428,17 +428,17 @@ const Transactions = () => {
                   </div>
                   <button
                     onClick={() => setShowExpenseChart(!showExpenseChart)}
-                    className={`h-10 px-3 py-2 text-xs border-1 border-divider rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                    className={`h-8 md:h-10 w-8 md:w-auto px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-xs border-1 border-divider rounded-lg flex items-center justify-center gap-1 md:gap-2 transition-colors flex-shrink-0 ${
                       showExpenseChart
                         ? "bg-indigo-500 text-white border-indigo-500"
                         : "bg-default-400/20 dark:bg-default-500/20 hover:bg-default-400/30"
                     }`}
                     aria-label="Toggle chart"
                   >
-                    <BarChart3 size={16} />
+                    <BarChart3 size={14} className="md:w-4 md:h-4" />
                   </button>
                 </div>
-                <span className="text-sm text-red-600 font-medium whitespace-nowrap ml-2">
+                <span className="text-xs md:text-sm text-red-600 font-medium whitespace-nowrap ml-1 md:ml-2 flex-shrink-0 border-2 px-2 py-1 rounded-2xl">
                   -₹{expenseTotal}
                 </span>
               </div>
@@ -457,6 +457,13 @@ const Transactions = () => {
                           outerRadius={70}
                           fill="#8884d8"
                           dataKey="value"
+                          label={({ percent }) =>
+                            `${(percent * 100).toFixed(0)}%`
+                          }
+                          labelStyle={{
+                            fontSize: isMobile ? "10px" : "14px",
+                            fontWeight: "500",
+                          }}
                         >
                           {expenseChartData.map((entry, index) => (
                             <Cell
@@ -530,25 +537,27 @@ const Transactions = () => {
           </div>
 
           {/* Income Column */}
+          <h3 className="font-semibold whitespace-nowrap text-xs md:text-base flex-shrink-0 mt-4 md:mt-0">
+            Income
+          </h3>
           <div className="bg-white shadow rounded-lg overflow-hidden border-1 border-divider">
-            <div className="px-4 py-3 border-b">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1">
-                  <h3 className="font-semibold whitespace-nowrap">Income</h3>
-                  <div className="relative flex items-center justify-center rounded-lg border-1 border-divider">
+            <div className="px-2 md:px-4 py-2 md:py-3 border-b">
+              <div className="flex items-center justify-between gap-1 md:gap-2 w-full overflow-x-auto">
+                <div className="flex items-center gap-1 md:gap-2 flex-1 min-w-0">
+                  <div className="relative flex items-center justify-center rounded-lg border-1 border-divider w-24 md:w-48 flex-shrink-0">
                     <Input
                       classNames={{
-                        base: "w-48 h-10",
+                        base: "w-24 mr-2 md:mr-4 md:w-48 h-8 md:h-10",
                         mainWrapper: "h-full",
-                        input: "text-xs focus:outline-none",
+                        input: "text-[10px] md:text-xs focus:outline-none",
                         inputWrapper:
                           "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20 border-none shadow-none focus-within:ring-0 focus-within:ring-offset-0 focus-within:border-none",
                       }}
-                      placeholder="Search income..."
+                      placeholder="Search..."
                       size="sm"
                       startContent={
-                        <div className="pl-2 pr-2">
-                          <SearchIcon size={16} />
+                        <div className="pl-1 md:pl-2 pr-1 md:pr-2">
+                          <SearchIcon className="w-2 h-3 md:w-4 md:h-4" />
                         </div>
                       }
                       type="search"
@@ -557,23 +566,23 @@ const Transactions = () => {
                     />
                     {incomeSearch && (
                       <button
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+                        className="absolute right-1 md:right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
                         onClick={() => setIncomeSearch("")}
                         aria-label="Clear search"
                       >
-                        <X size={16} />
+                        <X size={12} className="md:w-4 md:h-4" />
                       </button>
                     )}
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-shrink-0">
                     <Filter
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                      size={16}
+                      className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none md:w-4 md:h-4"
+                      size={12}
                     />
                     <select
                       value={incomeFilterCategory}
                       onChange={(e) => setIncomeFilterCategory(e.target.value)}
-                      className="h-10 pl-9 pr-4 py-2 text-xs border-1 border-divider rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 bg-default-400/20 dark:bg-default-500/20 whitespace-nowrap"
+                      className="h-8 md:h-10 pl-7 md:pl-9 pr-2 md:pr-4 py-1 md:py-2 text-[10px] md:text-xs border-1 border-divider rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 bg-default-400/20 dark:bg-default-500/20 whitespace-nowrap"
                     >
                       <option value="All">All</option>
                       <option value="Bonus">Bonus</option>
@@ -584,17 +593,17 @@ const Transactions = () => {
                   </div>
                   <button
                     onClick={() => setShowIncomeChart(!showIncomeChart)}
-                    className={`h-10 px-3 py-2 text-xs border-1 border-divider rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                    className={`h-8 md:h-10 w-8 md:w-auto px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-xs border-1 border-divider rounded-lg flex items-center justify-center gap-1 md:gap-2 transition-colors flex-shrink-0 ${
                       showIncomeChart
                         ? "bg-indigo-500 text-white border-indigo-500"
                         : "bg-default-400/20 dark:bg-default-500/20 hover:bg-default-400/30"
                     }`}
                     aria-label="Toggle chart"
                   >
-                    <BarChart3 size={16} />
+                    <BarChart3 size={14} className="md:w-4 md:h-4" />
                   </button>
                 </div>
-                <span className="text-sm text-green-600 font-medium whitespace-nowrap ml-2">
+                <span className="text-xs md:text-sm text-green-600 font-medium whitespace-nowrap ml-1 md:ml-2 flex-shrink-0 border-2 px-2 py-1 rounded-2xl">
                   +₹{incomeTotal}
                 </span>
               </div>
@@ -613,6 +622,13 @@ const Transactions = () => {
                           outerRadius={70}
                           fill="#8884d8"
                           dataKey="value"
+                          label={({ percent }) =>
+                            `${(percent * 100).toFixed(0)}%`
+                          }
+                          labelStyle={{
+                            fontSize: isMobile ? "10px" : "14px",
+                            fontWeight: "500",
+                          }}
                         >
                           {incomeChartData.map((entry, index) => (
                             <Cell

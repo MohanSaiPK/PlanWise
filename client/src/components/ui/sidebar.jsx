@@ -25,9 +25,9 @@ export const SidebarProvider = ({
   );
 };
 
-export const Sidebar = ({ children, open, setOpen, animate }) => {
+export const Sidebar = ({ children, open, setOpen, animate = true }) => {
   return (
-    <SidebarProvider open={open} setOpen={setOpen} animate={false}>
+    <SidebarProvider open={open} setOpen={setOpen} animate={animate}>
       {children}
     </SidebarProvider>
   );
@@ -43,24 +43,34 @@ export const SidebarBody = (props) => {
 };
 
 export const DesktopSidebar = ({ className, children, ...props }) => {
-  const { open, setOpen, animate } = useSidebar();
   return (
     <>
-      <motion.div
+      <div
         className={cn(
-          "fixed top-20 left-0 h-[calc(100vh-5rem)] px-4 py-4 hidden md:flex md:flex-col bg-neutral-100 dark:bg-neutral-800 shrink-0 z-30 border-r border-neutral-200 dark:border-neutral-700",
+          "fixed top-20 left-0 h-[calc(100vh-5rem)] w-[300px] px-4 py-4 hidden md:flex md:flex-col bg-neutral-100 dark:bg-neutral-800 shrink-0 z-30 border-r border-neutral-200 dark:border-neutral-700",
           className
         )}
-        animate={{
-          width: animate ? (open ? "300px" : "60px") : "300px",
-        }}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
         {...props}
       >
         {children}
-      </motion.div>
+      </div>
     </>
+  );
+};
+
+// Mobile menu button component that can be used in navbar
+export const MobileSidebarTrigger = ({ currentRouteIcon }) => {
+  const { open, setOpen } = useSidebar();
+  return (
+    <button
+      className="md:hidden p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+      onClick={() => setOpen(!open)}
+      aria-label="Toggle menu"
+    >
+      {currentRouteIcon || (
+        <IconMenu2 className="h-6 w-6 text-neutral-800 dark:text-neutral-200" />
+      )}
+    </button>
   );
 };
 
@@ -68,56 +78,63 @@ export const MobileSidebar = ({ className, children, ...props }) => {
   const { open, setOpen } = useSidebar();
   return (
     <>
-      <div
-        className={cn(
-          "h-10 px-4 py-4 flex flex-row md:hidden  items-center justify-between bg-neutral-100 dark:bg-neutral-800 w-full"
-        )}
-        {...props}
-      >
-        <div className="flex justify-end z-20 w-full">
-          <IconMenu2
-            className="text-neutral-800 dark:text-neutral-200"
-            onClick={() => setOpen(!open)}
-          />
-        </div>
-        <AnimatePresence>
-          {open && (
+      <AnimatePresence>
+        {open && (
+          <>
             <motion.div
-              initial={{ x: "-100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "-100%", opacity: 0 }}
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
               transition={{
                 duration: 0.3,
                 ease: "easeInOut",
               }}
               className={cn(
-                "fixed h-full w-full inset-0 bg-white dark:bg-neutral-900 p-10 z-[100] flex flex-col justify-between",
+                "fixed h-full w-[280px] max-w-[85vw] left-0 top-0 bg-white dark:bg-neutral-900 shadow-xl z-[100] flex flex-col md:hidden overflow-y-auto",
                 className
               )}
+              {...props}
             >
-              <div
-                className="absolute right-10 top-10 z-50 text-neutral-800 dark:text-neutral-200"
-                onClick={() => setOpen(!open)}
-              >
-                <IconX />
+              <div className="p-4 pb-6 flex flex-col h-full">
+                <div className="flex items-center justify-end mb-2">
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                    aria-label="Close menu"
+                  >
+                    <IconX className="h-5 w-5 text-neutral-800 dark:text-neutral-200" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto">{children}</div>
               </div>
-              {children}
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-[99] md:hidden"
+              onClick={() => setOpen(false)}
+            />
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 };
 
 export const SidebarLink = ({ link, className, onClick, ...props }) => {
-  const { open, animate } = useSidebar();
+  const { setOpen } = useSidebar();
   const isActive = link.active || false;
 
   const handleClick = (e) => {
     if (onClick) {
       e.preventDefault();
       onClick(e);
+      // Close sidebar on mobile after navigation
+      if (window.innerWidth < 768) {
+        setTimeout(() => setOpen(false), 100);
+      }
     }
   };
 
@@ -134,15 +151,9 @@ export const SidebarLink = ({ link, className, onClick, ...props }) => {
       {...props}
     >
       {link.icon}
-      <motion.span
-        animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1,
-        }}
-        className="text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
-      >
+      <span className="text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0">
         {link.label}
-      </motion.span>
+      </span>
     </div>
   );
 

@@ -2,7 +2,7 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import PublicHeader from "./Header/PublicHeader";
 import PublicFooter from "./Header/PublicFooter";
-import ScrollToTop from "../ScrollToTop";
+import ScrollToTop from "../ScrollControl/ScrollToTop";
 
 const PublicLayout = () => {
   return (

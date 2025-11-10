@@ -1,14 +1,40 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { DollarSign, Bell, Settings, LogOut, ChevronDown } from "lucide-react";
 import SettingsModal from "../../Settings/SettingsModal";
 import imagesData from "../../../assets/data/images.json";
+import { MobileSidebarTrigger } from "../../ui/sidebar";
+import {
+  IconLayoutDashboard,
+  IconReceipt,
+  IconTarget,
+  IconChartBar,
+} from "@tabler/icons-react";
 
 const MainNavbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Get current route icon for mobile
+  const getCurrentRouteIcon = () => {
+    const iconClass = "h-6 w-6 text-neutral-800 dark:text-neutral-200";
+    if (location.pathname.startsWith("/app/dashboard")) {
+      return <IconLayoutDashboard className={iconClass} />;
+    }
+    if (location.pathname.startsWith("/app/transactions")) {
+      return <IconReceipt className={iconClass} />;
+    }
+    if (location.pathname.startsWith("/app/goals")) {
+      return <IconTarget className={iconClass} />;
+    }
+    if (location.pathname.startsWith("/app/reports")) {
+      return <IconChartBar className={iconClass} />;
+    }
+    return <IconLayoutDashboard className={iconClass} />;
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -36,11 +62,12 @@ const MainNavbar = () => {
   }, []);
 
   return (
-    <nav className="w-full h-20 flex items-center justify-between px-6 border-b border-divider bg-background/70 backdrop-blur-lg fixed top-0 left-0 right-0 z-50">
-      {/* Left: Brand */}
+    <nav className="w-full h-20 flex items-center justify-between px-4 md:px-6 border-b border-divider bg-background/70 backdrop-blur-lg fixed top-0 left-0 right-0 z-50">
+      {/* Left: Brand and Mobile Menu */}
       <div className="flex items-center gap-2">
-        <DollarSign className="h-6 w-6" />
-        <h1 className="text-xl font-bold text-foreground">PlanWise</h1>
+        <MobileSidebarTrigger currentRouteIcon={getCurrentRouteIcon()} />
+        <DollarSign className="hidden md:block h-6 w-6" />
+        <h1 className="text-lg md:text-xl font-bold text-foreground">PlanWise</h1>
       </div>
 
       {/* Right: Actions */}

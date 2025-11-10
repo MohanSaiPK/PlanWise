@@ -6,7 +6,7 @@ const PublicHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
-
+  const isRegisterPage = location.pathname === "/register";
   return (
     <nav className="w-full h-20 flex items-center justify-between px-6 border-b border-divider bg-background/70 backdrop-blur-lg fixed top-0 left-0 right-0 z-40">
       {/* Left: Brand */}
@@ -20,7 +20,7 @@ const PublicHeader = () => {
       </div>
 
       {/* Center: Navigation Links */}
-      {!isLoginPage && (
+      {!isLoginPage && !isRegisterPage && (
         <div className="hidden sm:flex items-center gap-4 absolute left-1/2 -translate-x-1/2">
           <a
             href="#"
