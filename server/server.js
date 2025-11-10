@@ -12,13 +12,24 @@ import uploadRoutes from "./routes/uploadRoute.js";
 
 dotenv.config();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://planwise.vercel.app", // your frontend domain
+];
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://planwise.vercel.app"],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use("/api/uploads", uploadRoutes); // <-- NEW ROUTE MOUNT
 // app.options("*", cors());
