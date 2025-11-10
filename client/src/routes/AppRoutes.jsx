@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import MainLayout from "../components/Layout/MainLayout.jsx";
+import MainLayout from "../components/layout/MainLayout.jsx";
 import SetupGuard from "./SetupGuard.jsx";
 import FirstLogin from "../pages/AppPages/FirstLogin.jsx";
 import Dashboard from "../pages/AppPages/Dashboard.jsx";
