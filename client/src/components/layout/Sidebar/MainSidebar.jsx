@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { SidebarBody, SidebarLink } from "../../ui/sidebar";
-import { useSidebar } from "../../ui/useSidebar";
+import { SidebarBody, SidebarLink } from "../../ui/sidebar.jsx";
+import { useSidebar } from "../../ui/useSidebar.js";
 import {
   IconLayoutDashboard,
   IconReceipt,

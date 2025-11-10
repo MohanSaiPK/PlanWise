@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { API_BASE_URL } from "../api";
 
 const IncomeContext = createContext();
 
@@ -28,7 +29,7 @@ export const IncomeProvider = ({ children }) => {
   const resetIncomes = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/income-expense", {
+      const response = await fetch(`${API_BASE_URL}/income-expense`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

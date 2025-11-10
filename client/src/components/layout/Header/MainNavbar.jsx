@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { DollarSign, Bell, Settings, LogOut, ChevronDown } from "lucide-react";
-import SettingsModal from "../../Settings/SettingsModal";
+import SettingsModal from "../../Settings/SettingsModal.jsx";
 import imagesData from "../../../assets/data/images.json";
-import { MobileSidebarTrigger } from "../../ui/sidebar";
+import { MobileSidebarTrigger } from "../../ui/sidebar.jsx";
 import {
   IconLayoutDashboard,
   IconReceipt,
@@ -67,7 +67,9 @@ const MainNavbar = () => {
       <div className="flex items-center gap-2">
         <MobileSidebarTrigger currentRouteIcon={getCurrentRouteIcon()} />
         <DollarSign className="hidden md:block h-6 w-6" />
-        <h1 className="text-lg md:text-xl font-bold text-foreground">PlanWise</h1>
+        <h1 className="text-lg md:text-xl font-bold text-foreground">
+          PlanWise
+        </h1>
       </div>
 
       {/* Right: Actions */}

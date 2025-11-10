@@ -4,8 +4,8 @@ import React, { useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from "motion/react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
-import { useSidebar } from "./useSidebar";
-import { SidebarContext } from "./sidebar-context";
+import { useSidebar } from "./useSidebar.js";
+import { SidebarContext } from "./sidebar-context.jsx";
 
 export const SidebarProvider = ({
   children,

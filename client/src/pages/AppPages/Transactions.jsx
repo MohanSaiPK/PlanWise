@@ -18,13 +18,13 @@ import {
   Gift,
 } from "lucide-react";
 import IncomeCards from "../../components/cards/IncomeCards";
-import { useIncome } from "../../hooks/useIncome";
+import { useIncome } from "../../hooks/useIncome.js";
 import {
   TransactionModal,
   TransactionModalForm,
-} from "../../components/modals/TransactionModal";
+} from "../../components/modals/TransactionModal.jsx";
 import { Input } from "@heroui/react";
-import { SearchIcon } from "../../components/ui/SearchIcon";
+import { SearchIcon } from "../../components/ui/SearchIcon.jsx";
 import {
   PieChart,
   Pie,
@@ -33,6 +33,7 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
+import { API_BASE_URL } from "../../api";
 // replaced page icon with lucide ReceiptText for consistency
 
 const Transactions = () => {
@@ -93,7 +94,7 @@ const Transactions = () => {
   const fetchTransactions = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch(`${API_BASE_URL}/transactions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -122,7 +123,7 @@ const Transactions = () => {
       amount: Number(txn.amount),
     };
 
-    const res = await fetch("http://localhost:5000/api/transactions", {
+    const res = await fetch(`${API_BASE_URL}/transactions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -157,7 +158,7 @@ const Transactions = () => {
 
   const handleDeleteTransaction = async (id) => {
     const token = localStorage.getItem("token");
-    await fetch(`http://localhost:5000/api/transactions/${id}`, {
+    await fetch(`${API_BASE_URL}/transactions/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });

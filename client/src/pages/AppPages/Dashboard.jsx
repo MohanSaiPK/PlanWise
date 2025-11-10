@@ -28,8 +28,9 @@ import { GaugeComponent } from "react-gauge-component";
 import { modes } from "../../assets/data/images.json";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import IncomeCards from "../../components/cards/IncomeCards";
-import { useIncome } from "../../hooks/useIncome";
+import IncomeCards from "../../components/cards/IncomeCards.jsx";
+import { useIncome } from "../../hooks/useIncome.js";
+import { API_BASE_URL } from "../../api";
 
 const Dashboard = () => {
   const { incomeData, loading, totalIncome, totalExpenses, resetIncomes } =
@@ -123,12 +124,9 @@ const Dashboard = () => {
   const fetchBaseIncome = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/user/user-base-income",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/user/user-base-income`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.success) {
         setJobIncome(data.income.jobIncome);
@@ -143,7 +141,7 @@ const Dashboard = () => {
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/user/profile", {
+      const res = await fetch(`${API_BASE_URL}/user/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -156,7 +154,7 @@ const Dashboard = () => {
   const fetchRecentTransaction = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch(`${API_BASE_URL}/transactions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -169,7 +167,7 @@ const Dashboard = () => {
   const fetchGoals = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/goals", {
+      const res = await fetch(`${API_BASE_URL}/goals`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch goals");

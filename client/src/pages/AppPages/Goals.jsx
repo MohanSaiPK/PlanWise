@@ -7,8 +7,8 @@ import "swiper/css";
 import "swiper/css/effect-cards";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import EmblaCarousel from "../../components/ui/Carousel";
-
+import EmblaCarousel from "../../components/ui/Carousel.jsx";
+import { API_BASE_URL } from "../../api";
 const Goals = () => {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [goals, setGoals] = useState([]);
@@ -50,7 +50,7 @@ const Goals = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/goals", {
+      const res = await fetch(`${API_BASE_URL}/goals`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -69,7 +69,7 @@ const Goals = () => {
     setLoadingAchieved(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/goals/achieved", {
+      const res = await fetch(`${API_BASE_URL}/goals/achieved`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -88,7 +88,7 @@ const Goals = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch("http://localhost:5000/api/goals/wallet", {
+      const res = await fetch(`${API_BASE_URL}/goals/wallet`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -104,7 +104,7 @@ const Goals = () => {
   const getRemainingMoney = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/income-expense", {
+      const response = await fetch(`${API_BASE_URL}/income-expense`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -133,7 +133,7 @@ const Goals = () => {
     if (!walletAmount || isNaN(walletAmount) || walletAmount <= 0) return;
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/goals/wallet", {
+      const res = await fetch(`${API_BASE_URL}/goals/wallet`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +171,7 @@ const Goals = () => {
       let res, data;
       if (editingGoalId) {
         console.log("Editing goal ID:", editingGoalId);
-        res = await fetch(`http://localhost:5000/api/goals/${editingGoalId}`, {
+        res = await fetch(`${API_BASE_URL}/goals/${editingGoalId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -180,7 +180,7 @@ const Goals = () => {
           body: JSON.stringify(newGoal),
         });
       } else {
-        res = await fetch("http://localhost:5000/api/goals", {
+        res = await fetch(`${API_BASE_URL}/goals`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -231,7 +231,7 @@ const Goals = () => {
     setTimeout(async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:5000/api/goals/${goalId}`, {
+        const res = await fetch(`${API_BASE_URL}/goals/${goalId}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -268,7 +268,7 @@ const Goals = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `http://localhost:5000/api/goals/${selectedGoalId}/allocate`,
+        `${API_BASE_URL}/goals/${selectedGoalId}/allocate`,
         {
           method: "POST",
           headers: {
@@ -304,16 +304,13 @@ const Goals = () => {
   const handleAchieveGoal = async (goalId) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `http://localhost:5000/api/goals/${goalId}/achieve`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/goals/${goalId}/achieve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error achieving goal");
@@ -383,7 +380,10 @@ const Goals = () => {
                   Remaining Balance
                 </p>
                 <p className="text-3xl font-bold text-gray-800">
-                  ₹{remainingMoney !== null ? remainingMoney.toLocaleString("en-IN") : "0"}
+                  ₹
+                  {remainingMoney !== null
+                    ? remainingMoney.toLocaleString("en-IN")
+                    : "0"}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Available for allocation

@@ -1,9 +1,9 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import PublicLayout from "../components/layout/PublicLayout";
-import Login from "../pages/PublicPages/Login";
-import Register from "../pages/PublicPages/Register";
-import LandingPage from "../pages/PublicPages/LandingPage";
+import PublicLayout from "../components/layout/PublicLayout.jsx";
+import Login from "../pages/PublicPages/Login.jsx";
+import Register from "../pages/PublicPages/Register.jsx";
+import LandingPage from "../pages/PublicPages/LandingPage.jsx";
 
 const PublicRoutes = () => {
   return (

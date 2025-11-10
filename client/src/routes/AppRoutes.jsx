@@ -1,13 +1,13 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import MainLayout from "../components/Layout/MainLayout";
-import SetupGuard from "./SetupGuard";
-import FirstLogin from "../pages/AppPages/FirstLogin";
-import Dashboard from "../pages/AppPages/Dashboard";
-import ProtectedRoute from "./ProtectedRoute";
-import Transactions from "../pages/AppPages/Transactions";
-import Goals from "../pages/AppPages/Goals";
-import Reports from "../pages/AppPages/Reports";
+import MainLayout from "../components/Layout/MainLayout.jsx";
+import SetupGuard from "./SetupGuard.jsx";
+import FirstLogin from "../pages/AppPages/FirstLogin.jsx";
+import Dashboard from "../pages/AppPages/Dashboard.jsx";
+import ProtectedRoute from "./ProtectedRoute.jsx";
+import Transactions from "../pages/AppPages/Transactions.jsx";
+import Goals from "../pages/AppPages/Goals.jsx";
+import Reports from "../pages/AppPages/Reports.jsx";
 
 const AppRoutes = () => {
   return (

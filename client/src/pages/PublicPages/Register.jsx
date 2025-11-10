@@ -2,6 +2,7 @@ import React from "react";
 import img from "../../assets/regimg.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api";
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -37,16 +38,13 @@ const Register = () => {
     } else {
       // code to send formData to your backend
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/auth/register",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
         const data = await response.json();
         if (response.ok) {
           alert("Registration successful!");

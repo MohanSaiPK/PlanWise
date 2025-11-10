@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth.js";
 import {
   Briefcase,
   TrendingUp,
@@ -10,6 +10,7 @@ import {
   User,
 } from "lucide-react";
 import imagesData from "../../assets/data/images.json";
+import { API_BASE_URL } from "../../api";
 
 const FirstLogin = () => {
   const { setUser } = useAuth();
@@ -74,7 +75,7 @@ const FirstLogin = () => {
 
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/user/setup", {
+      const res = await fetch(`${API_BASE_URL}/user/setup`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -167,7 +168,7 @@ const Step1Income = ({ formData, handleChange }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5000/api/user/profile", {
+    fetch(`${API_BASE_URL}/user/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -1,9 +1,9 @@
 import React from "react";
 import { Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Aurora from "../../components/ui/Aurora";
-import AnimatedContent from "../../components/ui/AnimatedContent";
-import CountUp from "../../components/ui/CountUp";
+import Aurora from "../../components/ui/Aurora.jsx";
+import AnimatedContent from "../../components/ui/AnimatedContent.jsx";
+import CountUp from "../../components/ui/CountUp.jsx";
 const LandingPage = () => {
   const navigate = useNavigate();
   return (

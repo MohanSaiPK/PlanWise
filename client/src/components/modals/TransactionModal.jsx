@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import Numpad from "./Numpad";
+import Numpad from "./Numpad.jsx";
 
 // Modal Component
 export const TransactionModal = ({ title, onClose, onSubmit, children }) => (
@@ -99,7 +99,8 @@ export const TransactionModalForm = ({ txn, setTxn, isExpense = false }) => {
         >
           {txn.amount ? (
             <span className="text-lg font-semibold text-gray-900">
-              ₹{Number(txn.amount).toLocaleString("en-IN", {
+              ₹
+              {Number(txn.amount).toLocaleString("en-IN", {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2,
               })}
@@ -121,4 +122,3 @@ export const TransactionModalForm = ({ txn, setTxn, isExpense = false }) => {
     </div>
   );
 };
-

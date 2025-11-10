@@ -14,7 +14,8 @@ import {
   computeFinancialScore,
   computeIncomeExpenseScore,
   computeSpendingSpeedScore,
-} from "../../lib/financeScore";
+} from "../../lib/financeScore.js";
+import { API_BASE_URL } from "../../api";
 
 const monthLabel = (mIdx) =>
   new Date(new Date().getFullYear(), mIdx, 1).toLocaleDateString("en-US", {
@@ -32,13 +33,13 @@ const Reports = () => {
     setLoading(true);
     try {
       const [txRes, incomeRes, profileRes] = await Promise.all([
-        fetch("http://localhost:5000/api/transactions", {
+        fetch(`${API_BASE_URL}/transactions`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("http://localhost:5000/api/user/user-base-income", {
+        fetch(`${API_BASE_URL}/user/user-base-income`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("http://localhost:5000/api/user/profile", {
+        fetch(`${API_BASE_URL}/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

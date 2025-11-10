@@ -11,7 +11,7 @@ import {
   Save,
 } from "lucide-react";
 import imagesData from "../../assets/data/images.json";
-
+import { API_BASE_URL } from "../../api";
 const SettingsModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     jobIncome: "",
@@ -47,7 +47,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/user/profile", {
+      const res = await fetch(`${API_BASE_URL}/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -97,7 +97,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/user/setup", {
+      const res = await fetch(`${API_BASE_URL}/user/setup`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

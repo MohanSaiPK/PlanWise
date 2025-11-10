@@ -4,7 +4,7 @@ import img from "../../assets/loginimg.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
-
+import { API_BASE_URL } from "../../api";
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -34,7 +34,7 @@ const Login = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import IncomeContext from "../context/IncomeContext";
+import IncomeContext from "../context/IncomeContext.js";
 
 export const useIncome = () => {
   const context = useContext(IncomeContext);

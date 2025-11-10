@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Plus, TrendingUp, TrendingDown } from "lucide-react";
-import { useIncome } from "../../hooks/useIncome";
+import { useIncome } from "../../hooks/useIncome.js";
 import {
   TransactionModal,
   TransactionModalForm,
-} from "../modals/TransactionModal";
+} from "../modals/TransactionModal.jsx";
+import { API_BASE_URL } from "../../api";
 
 const FloatingActionButton = () => {
   const { resetIncomes } = useIncome();
@@ -76,7 +77,7 @@ const FloatingActionButton = () => {
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch(`${API_BASE_URL}/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

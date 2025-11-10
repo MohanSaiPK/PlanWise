@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 
 import { Outlet } from "react-router-dom";
-import MainNavbar from "./Header/MainNavbar";
-import MainSidebar from "./Sidebar/MainSidebar";
-import FloatingActionButton from "../FloatingActionButton/FloatingActionButton";
-import { SidebarProvider } from "../ui/sidebar";
+import MainNavbar from "./Header/MainNavbar.jsx";
+import MainSidebar from "./Sidebar/MainSidebar.jsx";
+import FloatingActionButton from "../FloatingActionButton/FloatingActionButton.jsx";
+import { SidebarProvider } from "../ui/sidebar.jsx";
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
