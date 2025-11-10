@@ -31,17 +31,6 @@ services:
     env_file:
       - ./server/.env
 
-  ai-service:
-    build: ./ai-service
-    ports:
-      - "8000:8000"
-    volumes:
-      - type: bind
-        source: ./ai-service
-        target: /app
-    env_file:
-      - ./ai-service/.env
-
 volumes:
   client_node_modules:
   server_node_modules:
