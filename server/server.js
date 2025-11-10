@@ -14,7 +14,7 @@ dotenv.config();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://plan-wise-5unq.vercel.app/", // your frontend domain
+  "https://plan-wise-5unq.vercel.app", // your frontend domain
 ];
 const app = express();
 app.use(
