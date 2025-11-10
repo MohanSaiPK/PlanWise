@@ -13,7 +13,12 @@ import uploadRoutes from "./routes/uploadRoute.js";
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://planwise.vercel.app"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use("/api/uploads", uploadRoutes); // <-- NEW ROUTE MOUNT
 // app.options("*", cors());
@@ -56,16 +61,14 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
+const PORT = process.env.PORT || 5000;
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("Connected to MongoDB");
-    app.listen(5000, () =>
-      console.log("Server running on http://localhost:5000")
-    );
+    app.listen(PORT, () => console.log(`Server running on ${PORT}`));
   })
   .catch((err) => {
     console.error("MongoDB connection error:", err);
-    process.exit(1); // Exit if database connection fails
+    process.exit(0); // Exit if database connection fails
   });
