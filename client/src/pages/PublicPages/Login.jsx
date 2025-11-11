@@ -1,6 +1,6 @@
 import React from "react";
 //import { useNavigate } from "react-router-dom";
-import img from "../../assets/loginimg.png";
+import { publicImages } from "../../assets/data/images.json";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
@@ -67,46 +67,85 @@ const Login = () => {
   };
 
   return (
-    <div className=" flex items-center justify-center min-h-screen bg-black ">
-      <div className="flex items-center justify-center bg-white  shadow-lg w-2/3 rounded-3xl">
-        <img src={img} alt="loginimg" className="w-1/2 rounded-l-3xl " />
-        <div className="w-1/2 flex flex-col  justify-center pt-10 px-10">
-          <h1 className="text-3xl font-bold mb-6 ">Welcome Back!</h1>
-          {error && <p className="text-red-500 mb-4">{error}</p>}
+    <div className="flex items-center justify-center min-h-screen bg-black px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="flex flex-col lg:flex-row items-center justify-center bg-white shadow-2xl w-full max-w-4xl rounded-2xl sm:rounded-3xl overflow-hidden">
+        {/* Image Section - Hidden on mobile, shown on larger screens */}
+        <div className="hidden lg:block lg:w-1/2">
+          <img
+            src={publicImages[0].source}
+            alt="loginimg"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        
+        {/* Form Section */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center p-5 sm:p-6 lg:p-8 xl:p-10">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 text-gray-900">
+            Welcome Back!
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">
+            Enter your details to continue
+          </p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           <form
-            className="space-y-4 flex flex-col max-w-2xs"
+            className="space-y-3 sm:space-y-4 flex flex-col"
             onSubmit={handleSubmit}
           >
-            <label className="block text-sm font-medium text-gray-700">
-              Enter your Details
-            </label>
-            <input
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              className="p-4"
-            />
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="p-4"
-            />
-            <label className="flex items-center  space-x-2">
-              <input type="checkbox" />
-              <p>Remember me</p>
-            </label>
-            <button type="submit" className="w-full border p-4">
+            <div>
+              <input
+                name="email"
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <input
+                name="password"
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all text-sm"
+                required
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 text-green-400 border-gray-300 rounded focus:ring-green-400"
+                />
+                <span className="text-xs sm:text-sm text-gray-700">
+                  Remember me
+                </span>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-black text-white p-2.5 sm:p-3 rounded-lg font-semibold text-sm hover:bg-green-400 hover:border-green-400 border border-black transition-all duration-300 shadow-lg hover:shadow-green-400/50"
+            >
               Login
             </button>
-            <p className="text-sm text-gray-500">
-              Don't have an account?
-              <a href="/register" className="text-blue-500">
-                {" "}
+
+            <p className="text-xs sm:text-sm text-gray-600 text-center">
+              Don't have an account?{" "}
+              <a
+                href="/register"
+                className="text-green-500 hover:text-green-600 font-semibold transition-colors"
+              >
                 Sign up
               </a>
             </p>

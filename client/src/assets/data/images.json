@@ -28,5 +28,15 @@
       "type": "planwise",
       "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1762608984/PW_logo_r66dop.png"
     }
+  ],
+  "publicImages": [
+    {
+      "type": "login",
+      "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1762872998/login_image_bgpy4x.png"
+    },
+    {
+      "type": "register",
+      "source": "https://res.cloudinary.com/dwa8nchsd/image/upload/v1762872776/regimg_mfa0wf.png"
+    }
   ]
 }

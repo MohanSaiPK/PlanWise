@@ -1,5 +1,5 @@
 import React from "react";
-import img from "../../assets/regimg.png";
+import { publicImages } from "../../assets/data/images.json";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api";
@@ -33,7 +33,6 @@ const Register = () => {
       return;
     } else if (!formData.email.includes("@")) {
       setError("Please enter a valid email address");
-      setError;
       return;
     } else {
       // code to send formData to your backend
@@ -75,57 +74,100 @@ const Register = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black mt-10">
-      <div className="flex items-center  bg-white shadow-lg w-3/4 rounded-3xl">
-        <img src={img} alt="registerimg" className="w-1/2 rounded-l-3xl " />
-        <div className="w-1/2 flex flex-col  px-14 space-y-5">
-          <h1 className="text-2xl font-bold">
+    <div className="flex items-center justify-center min-h-screen bg-black px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="flex flex-col lg:flex-row items-center justify-center bg-white shadow-2xl w-full max-w-4xl rounded-2xl sm:rounded-3xl overflow-hidden">
+        {/* Image Section - Hidden on mobile, shown on larger screens */}
+        <div className="hidden lg:block lg:w-1/2">
+          <img
+            src={publicImages[1].source}
+            alt="registerimg"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        
+        {/* Form Section */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center p-5 sm:p-6 lg:p-8 xl:p-10">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 text-gray-900">
             PlanWise: Where your vision pays off.
           </h1>
-          {error && <p className="text-red-500 mb-4">{error}</p>}
-          <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
-            <label className="block text-sm font-medium text-gray-700">
-              Create your account!
-            </label>
-            <input
-              name="name"
-              type="text"
-              placeholder="Name"
-              value={formData.name}
-              required
-              className="p-4"
-              onChange={handleChange}
-            />
-            <input
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              required
-              className="p-4"
-              onChange={handleChange}
-            />
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              required
-              className="p-4"
-              onChange={handleChange}
-            />
-            <input
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm Password"
-              value={formData.confirmPassword}
-              required
-              className="p-4"
-              onChange={handleChange}
-            />
-            <button type="submit" className="border p-4">
+          <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">
+            Create your account to get started
+          </p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          <form
+            className="flex flex-col space-y-3 sm:space-y-4"
+            onSubmit={handleSubmit}
+          >
+            <div>
+              <input
+                name="name"
+                type="text"
+                placeholder="Name"
+                value={formData.name}
+                required
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all text-sm"
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <input
+                name="email"
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                required
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all text-sm"
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <input
+                name="password"
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                required
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all text-sm"
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <input
+                name="confirmPassword"
+                type="password"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                required
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all text-sm"
+                onChange={handleChange}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-black text-white p-2.5 sm:p-3 rounded-lg font-semibold text-sm hover:bg-green-400 hover:border-green-400 border border-black transition-all duration-300 shadow-lg hover:shadow-green-400/50"
+            >
               Register
             </button>
+
+            <p className="text-xs sm:text-sm text-gray-600 text-center">
+              Already have an account?{" "}
+              <a
+                href="/login"
+                className="text-green-500 hover:text-green-600 font-semibold transition-colors"
+              >
+                Sign in
+              </a>
+            </p>
           </form>
         </div>
       </div>
